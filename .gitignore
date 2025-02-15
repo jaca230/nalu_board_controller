@@ -1,0 +1,6 @@
+# .gitignore
+*.log
+*.bak
+*.swp
+/build/
+.vscode/
