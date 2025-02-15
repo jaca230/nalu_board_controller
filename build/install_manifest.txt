@@ -1,0 +1,4 @@
+/usr/local/include/nalu_board_controller/nalu_board_controller_logger.h
+/usr/local/include/nalu_board_controller/ip_address_info.h
+/usr/local/include/nalu_board_controller/nalu_board_manager.h
+/usr/local/lib/nalu_board_controller/lib_nalu_board_controller.a

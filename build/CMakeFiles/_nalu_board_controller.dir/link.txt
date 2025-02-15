@@ -1,0 +1,2 @@
+/usr/bin/ar qc lib_nalu_board_controller.a CMakeFiles/_nalu_board_controller.dir/src/ip_address_info.cpp.o CMakeFiles/_nalu_board_controller.dir/src/nalu_board_controller_logger.cpp.o CMakeFiles/_nalu_board_controller.dir/src/nalu_board_manager.cpp.o
+/usr/bin/ranlib lib_nalu_board_controller.a
