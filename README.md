@@ -1,6 +1,6 @@
 # Nalu Board Controller
 
-The **Nalu Board Controller** is a C++ library designed to interface with and control the Nalu Board hardware. This library includes utilities for board configuration, logging, and IP address management, providing a clean API to interact with the Nalu system.
+The **Nalu Board Controller** is a C++ library designed to interface with and control the Nalu Board hardware using C++. This library includes utilities for board configuration, logging, and IP address management, providing a clean API to interact with the Nalu system. This is not a full controller, but may be expanded in the future.
 
 ## Features
 
