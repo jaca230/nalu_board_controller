@@ -1,8 +1,0 @@
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/_nalu_board_controller.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/main.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/edit_cache.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/rebuild_cache.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/list_install_components.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/install.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/install/local.dir
-/home/pioneer/packages/software/nalu_board_controller/build/CMakeFiles/install/strip.dir

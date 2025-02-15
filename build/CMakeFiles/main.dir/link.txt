@@ -1,1 +1,0 @@
-/usr/bin/c++  -fvisibility=hidden CMakeFiles/main.dir/main.cpp.o -o bin/main  lib_nalu_board_controller.a /usr/lib/x86_64-linux-gnu/libpython3.10.so 
