@@ -28,13 +28,13 @@ target_link_libraries(_nalu_board_controller PRIVATE pybind11::embed)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/nalu_board_controller)
 
 # Install the library into /usr/local/nalu_board_controller/lib
-install(TARGETS _nalu_board_controller DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nalu_board_controller)
+install(TARGETS _nalu_board_controller DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 # Create the executable but don't install it
 add_executable(main main.cpp)
 
 # Link the executable with the library
-target_link_libraries(main PRIVATE _nalu_board_controller)
+target_link_libraries(main PRIVATE nalu_board_controller)
 
 # Do not install the executable
 # Uncomment the following line to install the executable if needed:
