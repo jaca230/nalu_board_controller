@@ -1,10 +1,10 @@
-#include "nalu_board_manager.h"
+#include "nalu_board_controller.h"
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>  // For std::transform
 #include <cctype>     // For std::tolower
 
-NaluBoardManager::NaluBoardManager(const std::string& model, const std::string& board_ip_port, 
+NaluBoardController::NaluBoardController(const std::string& model, const std::string& board_ip_port, 
                                    const std::string& host_ip_port, const std::string& config_file, 
                                    const std::string& clock_file, bool debug) 
     : config_file(config_file), clock_file(clock_file), debug(debug) {
@@ -22,8 +22,14 @@ NaluBoardManager::NaluBoardManager(const std::string& model, const std::string& 
     NaluBoardControllerLogger::debug("Python interpreter initialized.");
 }
 
+NaluBoardController::NaluBoardController(const NaluBoardParams& params) {
+    // Call the main constructor with the parameters
+    NaluBoardController(params.model, params.board_ip_port, params.host_ip_port, 
+                        params.config_file, params.clock_file, params.debug);
+}
 
-NaluBoardManager::~NaluBoardManager() {
+
+NaluBoardController::~NaluBoardController() {
     NaluBoardControllerLogger::debug("Cleaning up Python objects...");
 
     // Reset all Python objects to avoid crashes
@@ -41,7 +47,7 @@ NaluBoardManager::~NaluBoardManager() {
     NaluBoardControllerLogger::debug("Python interpreter finalized.");
 }
 
-void NaluBoardManager::setup_logger(int level) {
+void NaluBoardController::setup_logger(int level) {
     try {
         NaluBoardControllerLogger::debug("Setting up logger...");
         py::module logging = py::module::import("logging");
@@ -61,7 +67,7 @@ void NaluBoardManager::setup_logger(int level) {
     }
 }
 
-void NaluBoardManager::initialize_board() {
+void NaluBoardController::initialize_board() {
     try {
         NaluBoardControllerLogger::debug("Importing 'naludaq.board' module...");
         py::module naludaq_board = py::module::import("naludaq.board");
@@ -117,7 +123,7 @@ void NaluBoardManager::initialize_board() {
     }
 }
 
-void NaluBoardManager::init_capture(const std::string& target_ip_port, const std::vector<int>& channels, 
+void NaluBoardController::init_capture(const std::string& target_ip_port, const std::vector<int>& channels, 
                                      int windows, int lookback, int write_after_trig, const std::string& trigger_mode, 
                                      const std::string& lookback_mode, const std::vector<int>& trigger_values, 
                                      const std::vector<int>& dac_values) {
@@ -134,7 +140,7 @@ void NaluBoardManager::init_capture(const std::string& target_ip_port, const std
     NaluBoardControllerLogger::debug("Capture parameters initialized.");
 }
 
-void NaluBoardManager::start_capture() {
+void NaluBoardController::start_capture() {
     // Check if target_ip is set (i.e., not nullptr)
     if (!target_ip.isSet()) {
         NaluBoardControllerLogger::error("Error: target_ip not set. Please call init_capture() first.");
@@ -231,7 +237,7 @@ void NaluBoardManager::start_capture() {
     }
 }
 
-void NaluBoardManager::start_capture(const std::string& target_ip_port, const std::vector<int>& channels, 
+void NaluBoardController::start_capture(const std::string& target_ip_port, const std::vector<int>& channels, 
                                      int windows, int lookback, int write_after_trig, const std::string& trigger_mode, 
                                      const std::string& lookback_mode, const std::vector<int>& trigger_values, 
                                      const std::vector<int>& dac_values) {
@@ -240,7 +246,13 @@ void NaluBoardManager::start_capture(const std::string& target_ip_port, const st
     start_capture();
 }
 
-void NaluBoardManager::stop_capture() {
+void NaluBoardController::start_capture(const NaluCaptureParams& params) {
+    start_capture(params.target_ip_port, params.channels, params.windows, params.lookback, 
+        params.write_after_trig, params.trigger_mode, params.lookback_mode, 
+        params.trigger_values, params.dac_values);
+}
+
+void NaluBoardController::stop_capture() {
     try {
         NaluBoardControllerLogger::debug("Stopping data capture...");
         py::module naludaq_conn = py::module::import("naludaq.controllers");
@@ -255,7 +267,7 @@ void NaluBoardManager::stop_capture() {
 }
 
 
-void NaluBoardManager::configure_triggers(const std::vector<int>& trigger_values, bool rising_edge) {
+void NaluBoardController::configure_triggers(const std::vector<int>& trigger_values, bool rising_edge) {
     try {
         if (trigger_controller.is_none()) {
             throw std::runtime_error("Trigger controller not initialized. Call 'initialize_board()' first.");
@@ -277,7 +289,7 @@ void NaluBoardManager::configure_triggers(const std::vector<int>& trigger_values
     }
 }
 
-void NaluBoardManager::enable_ethernet() {
+void NaluBoardController::enable_ethernet() {
     try {
         if (control_registers.is_none()) {
             throw std::runtime_error("Control registers not initialized. Call 'initialize_board()' first.");
@@ -292,7 +304,7 @@ void NaluBoardManager::enable_ethernet() {
     }
 }
 
-void NaluBoardManager::enable_serial() {
+void NaluBoardController::enable_serial() {
     try {
         if (control_registers.is_none()) {
             throw std::runtime_error("Control registers not initialized. Call 'initialize_board()' first.");
