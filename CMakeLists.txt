@@ -18,17 +18,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Create a static library from all source files
-add_library(_nalu_board_controller STATIC ${SOURCES})
+add_library(nalu_board_controller STATIC ${SOURCES})
 
 # Link Pybind11 to the library
-target_link_libraries(_nalu_board_controller PRIVATE pybind11::embed)
+target_link_libraries(nalu_board_controller PRIVATE pybind11::embed)
 
 # Specify where to install the header files and library
 # Install headers into /usr/local/nalu_board_controller/include
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/nalu_board_controller)
 
 # Install the library into /usr/local/nalu_board_controller/lib
-install(TARGETS _nalu_board_controller DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS nalu_board_controller DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 # Create the executable but don't install it
 add_executable(main main.cpp)
