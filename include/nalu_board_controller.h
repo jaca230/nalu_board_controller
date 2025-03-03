@@ -7,8 +7,7 @@
 #include <tuple>
 #include "nalu_board_controller_logger.h"
 #include "ip_address_info.h"
-#include "nalu_board_params.h"
-#include "nalu_capture_params.h"
+#include "nalu_board_controller_params.h"
 
 namespace py = pybind11;
 
@@ -16,7 +15,7 @@ class NaluBoardController {
 public:
     NaluBoardController(const std::string& model, const std::string& board_ip_port,
                         const std::string& host_ip_port, const std::string& config_file = "",
-                        const std::string& clock_file = "", bool debug = false);
+                        const std::string& clock_file = "");
     NaluBoardController(const NaluBoardParams& params);
     
     ~NaluBoardController(); // Destructor
@@ -48,7 +47,6 @@ private:
 
     std::string config_file;
     std::string clock_file;
-    bool debug;
     
     IPAddressInfo target_ip; 
     std::tuple<int, int, int> readout_window;

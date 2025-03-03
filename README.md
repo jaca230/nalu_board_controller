@@ -145,50 +145,64 @@ This section provides an example of how to use the `NaluBoardManager` in a C++ p
 
 ```cpp
 #include <iostream>
-#include <vector>
-#include "nalu_board_manager.h"
+#include <chrono>
+
+#include "nalu_board_controller.h"
 
 int main() {
-    // Default values as per the Python code
-    std::string model = "HDSOCv1_evalr2";
-    std::string board_ip_port = "192.168.1.59:4660";
-    std::string host_ip_port = "192.168.1.1:4660";
-    bool debug = false;
-
-    // Capture settings (you can modify these as needed)
-    std::string target_ip_port = "192.168.1.1:12345";
-    std::vector<int> channels = {0, 1, 2, 3}; // Example channel list
-    int windows = 8;
-    int lookback = 8;
-    int write_after_trig = 8;
-    std::string trigger_mode = "ext";
-    std::string lookback_mode = "";
-    std::vector<int> trigger_values = {};
-    std::vector<int> dac_values = {};
-
     try {
         // Step 1: Initialize NaluBoardManager
-        NaluBoardManager board_manager(model, board_ip_port, host_ip_port, "", "", debug);
+        NaluBoardParams board_params;
+        board_params.model = "HDSoCv1_evalr2";
+        board_params.board_ip_port = "192.168.1.59:4660";
+        board_params.host_ip_port = "192.168.1.1:4660";
+        board_params.config_file = "";
+        board_params.clock_file = "";
+        board_params.debug = false;
 
-        // Step 2: Initialize the board
+        NaluBoardController board_manager(board_params);
+
+        // Step 2: Initialize the board (This step takes some time)
         board_manager.initialize_board();
-        
-        // Step 3: Initialize capture parameters
-        board_manager.init_capture(target_ip_port, channels, windows, lookback, write_after_trig, trigger_mode, 
-                                   lookback_mode, trigger_values, dac_values);
 
-        // Step 4: Start board capture
-        board_manager.start_capture();
-        
+        // Step 3: Initialize capture parameters
+        int num_channels = 32;
+        NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
+
+        capture_params.target_ip_port = "192.168.1.1:12345";
+        capture_params.assign_dac_values = false;
+        capture_params.windows = 4;
+        capture_params.lookback = 4;
+        capture_params.write_after_trig = 4;
+        capture_params.trigger_mode = "ext";
+        capture_params.lookback_mode = "";
+
+        // Manually set channels and their trigger/dac values
+        for (int i = 0; i < num_channels; ++i) {
+            NaluChannelInfo channel_info;
+            channel_info.trigger_value = 0;
+            channel_info.dac_value = 0;
+
+            capture_params.channels[i] = channel_info;
+        }
+
+        // Step 4: Start the capture
+        board_manager.start_capture(capture_params);
+
+        // Capture data for 10 seconds
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+
         // Step 5: Stop capture
         board_manager.stop_capture();
 
     } catch (const std::exception& e) {
-        std::cerr << "Exception caught: " << e.what() << std::endl;
+        std::cerr << "Exception: " << e.what() << std::endl;
     }
 
     return 0;
 }
+
+
 ```
 
 ## License

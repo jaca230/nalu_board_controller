@@ -19,12 +19,6 @@ void signal_handler(int signal) {
 }
 
 int main() {
-    // Default values as per the Python code
-    std::string model = "HDSOCv1_evalr2";
-    std::string board_ip_port = "192.168.1.59:4660";
-    std::string host_ip_port = "192.168.1.1:4660";
-    bool debug = false;
-
     // Set up logger
     NaluBoardControllerLogger::set_level(NaluBoardControllerLogger::LogLevel::DEBUG);
 
@@ -36,7 +30,16 @@ int main() {
 
         // Step 1: Initialize NaluBoardManager
         NaluBoardControllerLogger::info("Creating board_manager object...");
-        NaluBoardController board_manager(model, board_ip_port, host_ip_port, "", "", debug);
+        NaluBoardParams board_params;
+        board_params.model = "HDSoCv1_evalr2";
+        board_params.board_ip_port = "192.168.1.59:4660";
+        board_params.host_ip_port = "192.168.1.1:4660";
+        board_params.config_file = "";
+        board_params.clock_file = "";
+
+        NaluBoardController board_manager(board_params);
+        //NaluBoardController board_manager(board_params.model, board_params.board_ip_port, 
+        //    board_params.host_ip_port, board_params.config_file, board_params.clock_file);
 
         NaluBoardControllerLogger::info("board_manager object created successfully.");
 
@@ -47,23 +50,38 @@ int main() {
         // Step 3: Initialize capture parameters using the new methods
         NaluBoardControllerLogger::info("Initializing capture parameters...");
 
-        NaluCaptureParams capture_params;
+        int num_channels = 32;
+        NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
+        // capture_params.channels will be initialized as a map with num_channels keys each populated by default NaluChannelInfo struct
+
         capture_params.target_ip_port = "192.168.1.1:12345";
-        capture_params.channels = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                                    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
+        capture_params.assign_dac_values = false;
         capture_params.windows = 4;
         capture_params.lookback = 4;
         capture_params.write_after_trig = 4;
         capture_params.trigger_mode = "ext";
         capture_params.lookback_mode = "";
-        capture_params.trigger_values = {};
-        capture_params.dac_values = {};
+
+        // Example of how to manually set channels and their trigger/dac values
+        // This is not necessary since we called NaluCaptureParamsWrapper(num_channels) which initializes the channels map
+        // To the exact same thing we set it to below.
+        for (int i = 0; i < num_channels; ++i) {
+            NaluChannelInfo channel_info;
+
+            // Customize trigger_value and dac_value per channel
+            channel_info.trigger_value = 0;
+            channel_info.dac_value = 0;
+
+            // Add the channel info to the map, using the channel number (i) as the key
+            capture_params.channels[i] = channel_info;
+        }
 
         // Call the new start_capture method using capture_params
         NaluBoardControllerLogger::info("Starting board capture...");
         board_manager.start_capture(capture_params);
 
         // Wait for the signal to stop
+        NaluBoardControllerLogger::info("Capture started, hit Control-C to end capture...");
         while (running) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }

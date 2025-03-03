@@ -1,13 +1,13 @@
 #include "nalu_board_controller.h"
 #include <iostream>
 #include <stdexcept>
-#include <algorithm>  // For std::transform
+#include <algorithm>  // For std::transform, std::find
 #include <cctype>     // For std::tolower
 
 NaluBoardController::NaluBoardController(const std::string& model, const std::string& board_ip_port, 
                                    const std::string& host_ip_port, const std::string& config_file, 
-                                   const std::string& clock_file, bool debug) 
-    : config_file(config_file), clock_file(clock_file), debug(debug) {
+                                   const std::string& clock_file) 
+    : config_file(config_file), clock_file(clock_file) {
     
     // Convert model to lowercase
     this->model = model;
@@ -22,10 +22,23 @@ NaluBoardController::NaluBoardController(const std::string& model, const std::st
     NaluBoardControllerLogger::debug("Python interpreter initialized.");
 }
 
-NaluBoardController::NaluBoardController(const NaluBoardParams& params) {
-    // Call the main constructor with the parameters
-    NaluBoardController(params.model, params.board_ip_port, params.host_ip_port, 
-                        params.config_file, params.clock_file, params.debug);
+NaluBoardController::NaluBoardController(const NaluBoardParams& params) 
+    : config_file(params.config_file), clock_file(params.clock_file) {
+    // There is some pybind11 tomfoolery that requires us to repeat this code instead of just calling
+    // the other constructor. I have no idea why. My guess is something in pybind goes out of scope if I try
+    // to call the other constructor. If we don't do this, the code segfaults when trying to import naludaq.
+    
+    // Convert model to lowercase
+    this->model = params.model;
+    std::transform(this->model.begin(), this->model.end(), this->model.begin(), ::tolower);
+
+    // Parse IP and port using IPHelpers
+    this->board_ip = IPAddressInfo(params.board_ip_port);
+    this->host_ip = IPAddressInfo(params.host_ip_port);
+
+    NaluBoardControllerLogger::debug("Initializing Python interpreter...");
+    py::initialize_interpreter();  // Initialize Python interpreter once
+    NaluBoardControllerLogger::debug("Python interpreter initialized.");
 }
 
 
@@ -179,10 +192,14 @@ void NaluBoardController::start_capture() {
         if (!dac_values.empty()) {
             NaluBoardControllerLogger::debug("Configuring DAC values...");
             py::object board_controller = naludaq_conn.attr("get_board_controller")(board);
+            
             for (size_t chan = 0; chan < dac_values.size(); ++chan) {
-                NaluBoardControllerLogger::debug("Setting DAC value for channel " + std::to_string(chan) + 
-                                                 ": " + std::to_string(dac_values[chan]));
-                board_controller.attr("set_single_dac")(chan, dac_values[chan]);
+                // Check if the channel is included in the channels array
+                if (std::find(channels.begin(), channels.end(), chan) != channels.end()) {
+                    NaluBoardControllerLogger::debug("Setting DAC value for channel " + std::to_string(chan) + 
+                                                     ": " + std::to_string(dac_values[chan]));
+                    board_controller.attr("set_single_dac")(chan, dac_values[chan]);
+                }
             }
         }
 
@@ -247,10 +264,37 @@ void NaluBoardController::start_capture(const std::string& target_ip_port, const
 }
 
 void NaluBoardController::start_capture(const NaluCaptureParams& params) {
-    start_capture(params.target_ip_port, params.channels, params.windows, params.lookback, 
-        params.write_after_trig, params.trigger_mode, params.lookback_mode, 
-        params.trigger_values, params.dac_values);
+    // Construct the three arrays from NaluCaptureParams:
+    
+    std::vector<int> channels;
+    std::vector<int> trigger_values;
+    std::vector<int> dac_values;
+
+    // Loop through the channels map in NaluCaptureParams
+    for (const auto& entry : params.channels) {
+        if (!entry.second.enabled) {
+            channels.push_back(entry.first); // Channel ID
+
+            // Trigger values are only used in the immediate ("imm") trigger mode
+            if (params.trigger_mode == "imm") {
+                trigger_values.push_back(entry.second.trigger_value); // Trigger value for this channel
+            }
+        }
+    
+        // Only add to dac_values if assign_dac_values is true
+        // There must be a value for each channel regardless of how many are used.
+        // Using a map would be a better approach, but the inputs are already confusing enough as they are.
+        if (params.assign_dac_values) {
+            dac_values.push_back(entry.second.dac_value);  // DAC value for this channel
+        }
+    }
+    
+    // Now call the other start_capture method with the constructed arrays
+    start_capture(params.target_ip_port, channels, params.windows, params.lookback, 
+                  params.write_after_trig, params.trigger_mode, params.lookback_mode, 
+                  trigger_values, dac_values);
 }
+
 
 void NaluBoardController::stop_capture() {
     try {
