@@ -54,11 +54,12 @@ int main() {
         NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
         // capture_params.channels will be initialized as a map with num_channels keys each populated by default NaluChannelInfo struct
 
+        int windows = 62;
         capture_params.target_ip_port = "192.168.1.1:12345";
         capture_params.assign_dac_values = false;
-        capture_params.windows = 4;
-        capture_params.lookback = 4;
-        capture_params.write_after_trig = 4;
+        capture_params.windows = windows;
+        capture_params.lookback = windows;
+        capture_params.write_after_trig = windows;
         capture_params.trigger_mode = "ext";
         capture_params.lookback_mode = "";
 

@@ -36,6 +36,8 @@ struct NaluCaptureParams {
 };
 
 // NaluCaptureParamsWrapper that initializes the map
+// Normally, we could just put this method in the struct constructor. However, reflect-cpp doesn't support
+// Structs having constructors (in this way at least), so it's easier to just wrap it in a class.
 class NaluCaptureParamsWrapper {
 public:
     // Constructor that initializes the channel map

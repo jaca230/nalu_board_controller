@@ -210,6 +210,17 @@ void NaluBoardController::start_capture() {
         NaluBoardControllerLogger::debug("Checking if readout channels are provided...");
         if (!channels.empty()) {
             NaluBoardControllerLogger::debug("Setting readout channels...");
+            // Log the channels being activated
+            std::string channel_list = "[";
+            for (size_t i = 0; i < channels.size(); ++i) {
+                channel_list += std::to_string(channels[i]);
+                if (i < channels.size() - 1) {
+                    channel_list += ", ";
+                }
+            }
+            channel_list += "]";
+            NaluBoardControllerLogger::debug("Activating channels: " + channel_list);
+
             py::list py_channels;  // Create a Python list
             for (int channel : channels) {
                 py_channels.append(channel);  // Append each channel to the Python list
@@ -272,7 +283,7 @@ void NaluBoardController::start_capture(const NaluCaptureParams& params) {
 
     // Loop through the channels map in NaluCaptureParams
     for (const auto& entry : params.channels) {
-        if (!entry.second.enabled) {
+        if (entry.second.enabled) {
             channels.push_back(entry.first); // Channel ID
 
             // Trigger values are only used in the immediate ("imm") trigger mode
