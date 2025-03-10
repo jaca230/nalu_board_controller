@@ -50,7 +50,7 @@ int main() {
         // Step 3: Initialize capture parameters using the new methods
         NaluBoardControllerLogger::info("Initializing capture parameters...");
 
-        int num_channels = 32;
+        int num_channels = 16;
         NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
         // capture_params.channels will be initialized as a map with num_channels keys each populated by default NaluChannelInfo struct
 

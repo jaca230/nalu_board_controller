@@ -1,4 +1,6 @@
 #include "nalu_board_controller_logger.h"
+#include <stdexcept>
+#include <map>
 
 NaluBoardControllerLogger::LogLevel NaluBoardControllerLogger::log_level = NaluBoardControllerLogger::LogLevel::INFO;
 std::ofstream NaluBoardControllerLogger::log_file;
@@ -13,6 +15,22 @@ std::string NaluBoardControllerLogger::error_color = "\033[1;31m";   // Red
 // Set log level
 void NaluBoardControllerLogger::set_level(LogLevel level) {
     log_level = level;
+}
+
+void NaluBoardControllerLogger::set_level(const std::string& level) {
+    static std::map<std::string, LogLevel> level_map = {
+        {"debug", LogLevel::DEBUG},
+        {"info", LogLevel::INFO},
+        {"warning", LogLevel::WARNING},
+        {"error", LogLevel::ERROR},
+    };
+
+    auto it = level_map.find(level);
+    if (it != level_map.end()) {
+        log_level = it->second;
+    } else {
+        throw std::invalid_argument("Invalid log level string: " + level);
+    }
 }
 
 // Enable file logging

@@ -15,6 +15,7 @@ public:
     };
 
     static void set_level(LogLevel level);
+    static void set_level(const std::string& level);
     static void enable_file_logging(const std::string& filename);
     static void disable_file_logging();
 
