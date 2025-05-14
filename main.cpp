@@ -38,9 +38,6 @@ int main() {
         board_params.clock_file = "";
 
         NaluBoardController board_manager(board_params);
-        //NaluBoardController board_manager(board_params.model, board_params.board_ip_port, 
-        //    board_params.host_ip_port, board_params.config_file, board_params.clock_file);
-
         NaluBoardControllerLogger::info("board_manager object created successfully.");
 
         // Step 2: Initialize the board
@@ -50,28 +47,37 @@ int main() {
         // Step 3: Initialize capture parameters using the new methods
         NaluBoardControllerLogger::info("Initializing capture parameters...");
 
-        int num_channels = 16;
+        int num_channels = 32;  // Set the number of channels to 32
         NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
-        // capture_params.channels will be initialized as a map with num_channels keys each populated by default NaluChannelInfo struct
 
-        int windows = 62;
+        int windows = 1;
         capture_params.target_ip_port = "192.168.1.1:12345";
         capture_params.assign_dac_values = false;
         capture_params.windows = windows;
         capture_params.lookback = windows;
         capture_params.write_after_trig = windows;
-        capture_params.trigger_mode = "ext";
+        capture_params.trigger_mode = "self";
         capture_params.lookback_mode = "";
+        capture_params.low_reference = 3;
+        capture_params.high_reference = 11;
 
-        // Example of how to manually set channels and their trigger/dac values
-        // This is not necessary since we called NaluCaptureParamsWrapper(num_channels) which initializes the channels map
-        // To the exact same thing we set it to below.
+        // Initialize the channels with the specified trigger values and DAC values
         for (int i = 0; i < num_channels; ++i) {
             NaluChannelInfo channel_info;
 
-            // Customize trigger_value and dac_value per channel
+            // Set default trigger value to 0
             channel_info.trigger_value = 0;
+
+            // Set trigger value to 123 for channel 2
+            if (i == 2) {
+                channel_info.trigger_value = 123;
+            }
+
+            // Set DAC value to 0 (or any default value)
             channel_info.dac_value = 0;
+
+            // Enable all channels
+            channel_info.enabled = true;
 
             // Add the channel info to the map, using the channel number (i) as the key
             capture_params.channels[i] = channel_info;

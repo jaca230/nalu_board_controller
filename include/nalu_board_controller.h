@@ -23,16 +23,6 @@ public:
     void setup_logger(int level = 10);
     void initialize_board();
     
-    void init_capture(const std::string& target_ip_port, const std::vector<int>& channels = {},
-                      int windows = 8, int lookback = 8, int write_after_trig = 8, const std::string& trigger_mode = "ext", 
-                      const std::string& lookback_mode = "", const std::vector<int>& trigger_values = {},
-                      const std::vector<int>& dac_values = {});
-    
-    void start_capture();
-    void start_capture(const std::string& target_ip_port, const std::vector<int>& channels = {},
-                       int windows = 8, int lookback = 8, int write_after_trig = 8, const std::string& trigger_mode = "ext", 
-                       const std::string& lookback_mode = "", const std::vector<int>& trigger_values = {},
-                       const std::vector<int>& dac_values = {});
     void start_capture(const NaluCaptureParams& params);
     
     void stop_capture();
@@ -41,6 +31,19 @@ public:
     void enable_serial();
 
 private:
+    void init_capture(const std::string& target_ip_port, const std::vector<int>& channels = {},
+        int windows = 8, int lookback = 8, int write_after_trig = 8,
+        const std::string& trigger_mode = "ext", const std::string& lookback_mode = "",
+        const std::vector<int>& trigger_values = {}, const std::vector<int>& dac_values = {},
+        int low_reference = 0, int high_reference = 15);
+
+    void start_capture();
+    void start_capture(const std::string& target_ip_port, const std::vector<int>& channels = {},
+        int windows = 8, int lookback = 8, int write_after_trig = 8,
+        const std::string& trigger_mode = "ext", const std::string& lookback_mode = "",
+        const std::vector<int>& trigger_values = {}, const std::vector<int>& dac_values = {},
+        int low_reference = 0, int high_reference = 15);
+
     std::string model;
     IPAddressInfo board_ip;
     IPAddressInfo host_ip;
@@ -55,6 +58,8 @@ private:
     std::vector<int> channels;
     std::vector<int> trigger_values;
     std::vector<int> dac_values;
+    int high_reference;
+    int low_reference;
 
     py::object board;
     py::object board_controller;

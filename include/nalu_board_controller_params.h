@@ -30,6 +30,8 @@ struct NaluCaptureParams {
     bool assign_dac_values = false;
     std::string trigger_mode = "ext";
     std::string lookback_mode = "";
+    int low_reference = 0;
+    int high_reference = 15;
 
     // Map to store NaluChannelInfo for each channel
     std::map<int, NaluChannelInfo> channels;
