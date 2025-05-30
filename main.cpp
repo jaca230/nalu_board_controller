@@ -60,6 +60,7 @@ int main() {
         capture_params.lookback_mode = "";
         capture_params.low_reference = 3;
         capture_params.high_reference = 11;
+        capture_params.rising_edge = true;
 
         // Initialize the channels with the specified trigger values and DAC values
         for (int i = 0; i < num_channels; ++i) {
@@ -74,10 +75,14 @@ int main() {
             }
 
             // Set DAC value to 0 (or any default value)
-            channel_info.dac_value = 0;
+            channel_info.dac_value = 1804;
 
             // Enable all channels
-            channel_info.enabled = true;
+            if (i == 2) {
+                channel_info.enabled = true;
+            } else {
+                channel_info.enabled = false;  // Disable all other channels
+            }
 
             // Add the channel info to the map, using the channel number (i) as the key
             capture_params.channels[i] = channel_info;

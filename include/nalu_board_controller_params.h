@@ -9,7 +9,7 @@
 struct NaluChannelInfo {
     bool enabled = true;
     int trigger_value = 0;
-    int dac_value = 0;
+    int dac_value = 1804;
 };
 
 // NaluBoardParams definition
@@ -32,6 +32,7 @@ struct NaluCaptureParams {
     std::string lookback_mode = "";
     int low_reference = 0;
     int high_reference = 15;
+    bool rising_edge = true;
 
     // Map to store NaluChannelInfo for each channel
     std::map<int, NaluChannelInfo> channels;
