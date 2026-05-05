@@ -9,6 +9,7 @@ struct BoardConfig {
     std::string model = "HDSoCv1_evalr2";
     std::string board_endpoint = "192.168.1.59:4660";
     std::string host_endpoint = "192.168.1.1:4660";
+    bool asic_serial_mode = false;
     std::string config_file;
     std::string clock_file;
 };

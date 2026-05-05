@@ -3,6 +3,7 @@
 #include <csignal>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -70,9 +71,25 @@ nalu_board_controller::BoardConfig parse_board_config(const json& object) {
     assign_if_present(object, "model", config.model);
     assign_if_present(object, "board_endpoint", config.board_endpoint);
     assign_if_present(object, "host_endpoint", config.host_endpoint);
+    assign_if_present(object, "asic_serial_mode", config.asic_serial_mode);
     assign_if_present(object, "config_file", config.config_file);
     assign_if_present(object, "clock_file", config.clock_file);
     return config;
+}
+
+std::string resolve_relative_path(
+    const std::string& path,
+    const std::filesystem::path& config_directory) {
+    if (path.empty()) {
+        return path;
+    }
+
+    const std::filesystem::path candidate(path);
+    if (candidate.is_absolute()) {
+        return candidate.lexically_normal().string();
+    }
+
+    return (config_directory / candidate).lexically_normal().string();
 }
 
 nalu_board_controller::CaptureConfig parse_capture_config(const json& object) {
@@ -159,6 +176,8 @@ int main(int argc, char** argv) {
         }
 
         const json document = load_json(config_path);
+        const std::filesystem::path config_directory =
+            std::filesystem::absolute(std::filesystem::path(config_path)).parent_path();
         const json logging_config = document.value("logging", json::object());
         const std::string log_level = logging_config.value("level", "info");
         const std::string python_level = logging_config.value("python_level", log_level);
@@ -166,7 +185,9 @@ int main(int argc, char** argv) {
         nalu_board_controller::logging::configure(log_level);
         std::signal(SIGINT, signal_handler);
 
-        const auto board_config = parse_board_config(document.at("board"));
+        auto board_config = parse_board_config(document.at("board"));
+        board_config.config_file = resolve_relative_path(board_config.config_file, config_directory);
+        board_config.clock_file = resolve_relative_path(board_config.clock_file, config_directory);
         const auto capture_config = parse_capture_config(document.at("capture"));
 
         nalu_board_controller::Controller controller(board_config);

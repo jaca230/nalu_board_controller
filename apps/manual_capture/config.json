@@ -7,8 +7,9 @@
     "model": "HDSoCv1_evalr2",
     "board_endpoint": "192.168.1.59:4660",
     "host_endpoint": "192.168.1.1:4660",
+    "asic_serial_mode": false,
     "config_file": "",
-    "clock_file": ""
+    "clock_file": "../../resources/clocks/Si5341-RevD-HDSoC_31_25SYSclk_15_625SSTclk_400GccClk_156_25TxClk_31_25TxDivClk-Registers.txt"
   },
   "capture": {
     "target_endpoint": "192.168.1.1:12345",

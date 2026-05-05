@@ -22,6 +22,7 @@ State::State(const BoardConfig& config)
     : model_(to_lower_copy(config.model)),
       board_address_(config.board_endpoint),
       host_address_(config.host_endpoint),
+      asic_serial_mode_(config.asic_serial_mode),
       config_file_(config.config_file),
       clock_file_(config.clock_file) {}
 

@@ -101,6 +101,11 @@ void PythonBackend::initialize_board() {
             py::make_tuple(state_->board_address().getIp(), state_->board_address().getPort()),
             py::make_tuple(state_->host_address().getIp(), state_->host_address().getPort()));
 
+        board_.attr("params").attr("__setitem__")("serial_mode", py::bool_(state_->asic_serial_mode()));
+        spdlog::info("Using startup settings: asic_serial_mode={}, clock_file={}",
+                     state_->asic_serial_mode(),
+                     state_->clock_file().empty() ? std::string("<default>") : state_->clock_file());
+
         board_controller_ = naludaq_board.attr("get_board_controller")(board_);
         trigger_controller_ = naludaq_board.attr("get_trigger_controller")(board_);
         readout_controller_ = naludaq_board.attr("get_readout_controller")(board_);

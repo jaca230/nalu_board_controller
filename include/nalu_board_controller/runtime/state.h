@@ -25,6 +25,7 @@ public:
     const std::string& model() const { return model_; }
     const Address& board_address() const { return board_address_; }
     const Address& host_address() const { return host_address_; }
+    bool asic_serial_mode() const { return asic_serial_mode_; }
     const std::string& config_file() const { return config_file_; }
     const std::string& clock_file() const { return clock_file_; }
 
@@ -45,6 +46,7 @@ private:
     std::string model_;
     Address board_address_;
     Address host_address_;
+    bool asic_serial_mode_ = false;
     std::string config_file_;
     std::string clock_file_;
 
