@@ -1,210 +1,178 @@
 # Nalu Board Controller
 
-The **Nalu Board Controller** is a C++ library designed to interface with and control the Nalu Board hardware using C++. This library includes utilities for board configuration, logging, and IP address management, providing a clean API to interact with the Nalu system. This is not a full controller, but may be expanded in the future.
+`nalu_board_controller` is a C++ wrapper around the Python `naludaq` control stack. It is intended to be consumed both as a standalone project and as a dependency from larger MIDAS/frontend builds.
 
-## Features
+## What changed
 
-- **Board Management**: Provides functionalities to configure and manage Nalu Boards.
-- **Logging**: Built-in logging for diagnostics and monitoring.
+- CPM-friendly CMake/package layout
+- install/export support via `find_package(nalu_board_controller)`
+- mirrored `include/` and `src/` layout
+- config structs split into separate headers for reflection-friendly use
+- direct `spdlog` usage instead of the old logger shim
+- window level control is now part of `CaptureConfig`
+- standalone apps live under `apps/` and are opt-in
+- app-specific run and screening scripts live with each app
 
-## Prerequisites
+## Build
 
-To build and use the Nalu Board Controller, the following software must be installed:
-
-- **CMake** (version 3.10 or higher)
-- **A C++ compiler** (e.g., GCC, Clang)
-
-### Python Dependencies
-
-This project requires the following Python modules:
-
-- `pybind11`: A Python binding generator for C++11.
-- `naludaq`: A Python module used for interacting with the nalu hardware.
-
-You can install the required Python dependencies using `pip`:
+### Standalone
 
 ```bash
-pip install pybind11 naludaq
-```
-or
-```bash
-pip install -r requirements.txt
+./scripts/build.sh
 ```
 
-## Installation
+This configures with CMake and builds the library in `build/`.
 
-Here’s how you can modify your installation instructions to encourage using the provided `scripts/build.sh` and `scripts/install.sh` scripts for a more streamlined build and installation process:
-
----
-
-## Installation
-
-### Step 1: Clone the repository
-
-Start by cloning the repository to your local machine:
+### Apps
 
 ```bash
-git clone https://github.com/jaca230/nalu_board_controller.git
-cd nalu_board_controller
+./scripts/build.sh --apps
+./apps/manual_capture/scripts/build.sh
+./apps/manual_capture/scripts/run.sh
+./apps/packet_listener/scripts/build.sh
+./apps/packet_listener/scripts/run.sh
 ```
 
-### Step 2: Build the project
+Apps are not built by default.
 
-To simplify the build process, we’ve included a `build.sh` script to handle the configuration and compilation for you. Run the following command:
+### Install
 
 ```bash
-scripts/build.sh
+./scripts/install.sh -p /your/prefix
 ```
 
-This script will:
-- Set up a build directory.
-- Run `cmake` to configure the project.
-- Compile the project with `make`.
+The install exports a CMake package under:
 
-If you want to clean and rebuild the project, you can add the `-o` or `--overwrite` flag to the command:
-
-```bash
-scripts/build.sh -o
+```text
+<prefix>/lib/cmake/nalu_board_controller
 ```
 
-### Step 3: Install the library (optional)
+## Consume from CMake
 
-To install the library system-wide, you can use the `install.sh` script, which allows you to specify the installation prefix. By default, it installs the library to `/usr/local`, but you can specify a custom location with the `-p` or `--prefix` option.
+### As an installed package
 
-To install the library:
-
-```bash
-scripts/install.sh
+```cmake
+find_package(nalu_board_controller REQUIRED)
+target_link_libraries(your_target PRIVATE nalu_board_controller::nalu_board_controller)
 ```
 
-To install the library to a custom directory:
+### Via CPM / add_subdirectory style
 
-```bash
-scripts/install.sh -p /your/custom/path
+This project is now structured so a parent build can bring it in directly and link:
+
+```cmake
+target_link_libraries(your_target PRIVATE nalu_board_controller::nalu_board_controller)
 ```
 
-This script will:
-- Run the build process if needed.
-- Install the library into the specified location, defaulting to `/usr/local/include` and `/usr/local/lib`.
+## Headers
 
-If you want to overwrite a previous installation, you can add the `-o` or `--overwrite` flag to the command:
+All headers now live under `include/nalu_board_controller/...`, including internal implementation headers. The tree mirrors `src/`:
 
-```bash
-scripts/install.sh -o
+```text
+include/nalu_board_controller/config
+include/nalu_board_controller/controller
+include/nalu_board_controller/logging
+include/nalu_board_controller/python
+include/nalu_board_controller/runtime
+include/nalu_board_controller/types
 ```
 
----
-
-## Usage
-
-Once installed, you can link your C++ applications with the Nalu Board Controller library.
-
-The `main.cpp` file provided in the example is a C++ program that demonstrates how to interact with the Nalu Board using the `NaluBoardManager` and how to capture UDP packets using the `capture_packets` function.
-
-### Key Components of `main.cpp`
-
-1. **Initialization**:
-    - The program initializes the `NaluBoardManager` object, which is responsible for managing communication with the board.
-    - It also sets up the configuration parameters (such as channels, trigger mode, and capture settings) and prepares the board for packet capture.
-   
-2. **Capture Control**:
-    - The program starts the capture using `board_manager.start_capture()` and stops it using `board_manager.stop_capture()`. The capture process is tightly controlled within the main flow of execution.
-
-3. **Logging**:
-    - Throughout the program, `NaluBoardControllerLogger` is used for logging information and error messages, helping in debugging and tracking the capture process.
-
-### How to Run the Example
-
-In the `example/test` directory, you can use the `run.sh` script to execute the `main.cpp` program. Here's how you can use the `run.sh` script:
-
-### `run.sh` Script Overview
-
-The `run.sh` script allows you to run the compiled `main` executable from the `build/bin` directory. The script provides an option to run the executable in debug mode using `gdb`.
-
-1. **Running without Debugger**:
-    - If you simply want to run the program without debugging, you can execute:
-    ```bash
-    ./scripts/run.sh
-    ```
-
-2. **Running with Debugger**:
-    - If you want to run the program with `gdb` for debugging, you can use the `--debug` flag:
-    ```bash
-    ./scripts/run.sh --debug
-    ```
-
-To include the example code and instructions for running the program in your README, you can add a section like this:
-
----
-
-## Example: Running the NaluBoardManager
-
-This section provides an example of how to use the `NaluBoardManager` in a C++ program to initialize the board, configure the capture parameters, and start/stop the capture process.
-
-### Example Implimentation (`main.cpp` stripped down):
+Example usage:
 
 ```cpp
-#include <iostream>
-#include <chrono>
+#include <nalu_board_controller/config/board_config.h>
+#include <nalu_board_controller/controller/controller.h>
 
-#include "nalu_board_controller.h"
-
-int main() {
-    try {
-        // Step 1: Initialize NaluBoardManager
-        NaluBoardParams board_params;
-        board_params.model = "HDSoCv1_evalr2";
-        board_params.board_ip_port = "192.168.1.59:4660";
-        board_params.host_ip_port = "192.168.1.1:4660";
-        board_params.config_file = "";
-        board_params.clock_file = "";
-        board_params.debug = false;
-
-        NaluBoardController board_manager(board_params);
-
-        // Step 2: Initialize the board (This step takes some time)
-        board_manager.initialize_board();
-
-        // Step 3: Initialize capture parameters
-        int num_channels = 32;
-        NaluCaptureParams capture_params = NaluCaptureParamsWrapper(num_channels).get_capture_params();
-
-        capture_params.target_ip_port = "192.168.1.1:12345";
-        capture_params.assign_dac_values = false;
-        capture_params.windows = 4;
-        capture_params.lookback = 4;
-        capture_params.write_after_trig = 4;
-        capture_params.trigger_mode = "ext";
-        capture_params.lookback_mode = "";
-
-        // Manually set channels and their trigger/dac values
-        for (int i = 0; i < num_channels; ++i) {
-            NaluChannelInfo channel_info;
-            channel_info.trigger_value = 0;
-            channel_info.dac_value = 0;
-
-            capture_params.channels[i] = channel_info;
-        }
-
-        // Step 4: Start the capture
-        board_manager.start_capture(capture_params);
-
-        // Capture data for 10 seconds
-        std::this_thread::sleep_for(std::chrono::seconds(10));
-
-        // Step 5: Stop capture
-        board_manager.stop_capture();
-
-    } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-    }
-
-    return 0;
-}
-
-
+nalu_board_controller::BoardConfig board_config;
+nalu_board_controller::Controller controller(board_config);
 ```
+
+## Layout
+
+```text
+include/nalu_board_controller
+src/controller
+src/logging
+src/runtime
+src/python
+src/types
+apps
+apps/manual_capture
+apps/packet_listener
+scripts
+```
+
+## Apps
+
+`manual_capture`
+
+- executable: `build/bin/manual_capture`
+- config: [apps/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/config.json:1)
+- build script: [apps/manual_capture/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/build.sh:1)
+- run script: [apps/manual_capture/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/run.sh:1)
+- screening scripts: [apps/manual_capture/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/screening/stop.sh:1)
+
+`packet_listener`
+
+- executable: `build/bin/packet_listener`
+- config: [apps/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/config.json:1)
+- build script: [apps/packet_listener/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/build.sh:1)
+- run script: [apps/packet_listener/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/run.sh:1)
+- screening scripts: [apps/packet_listener/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/screening/stop.sh:1)
+
+Top-level dispatcher:
+
+```bash
+./apps/manual_capture/scripts/build.sh
+./scripts/run.sh manual_capture
+./apps/packet_listener/scripts/build.sh
+./scripts/run.sh packet_listener
+```
+
+## Capture Config
+
+`CaptureConfig` is now composed from smaller structs:
+
+```cpp
+nalu_board_controller::CaptureConfig config;
+config.readout_window.windows = 8;
+config.readout_window.lookback = 8;
+config.trigger.mode = "self";
+config.window_level_control.configure = true;
+config.window_level_control.enabled = true;
+```
+
+Relevant headers:
+
+```text
+nalu_board_controller/config/board_config.h
+nalu_board_controller/config/capture_config.h
+nalu_board_controller/config/capture_config_builder.h
+nalu_board_controller/config/channel_config.h
+nalu_board_controller/config/readout_window_config.h
+nalu_board_controller/config/trigger_config.h
+nalu_board_controller/config/window_level_control_config.h
+```
+
+Behavior:
+
+- `configure = false`: leave WLC untouched
+- `configure = true` and `enabled = true|false`: write the `wlc_on` register
+- `reinitialize_after_change = true`: re-run board startup after the register change, matching the workflow used in the reference notebooks
+
+This is aimed primarily at HDSoCv1/HDSoCv2-style boards where the register is available. If the underlying board/register path does not support WLC, the operation will fail loudly instead of silently pretending it succeeded.
+
+For `manual_capture`, the executable now reads its settings from JSON instead of hardcoding them in `main.cpp`. Edit [apps/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/config.json:1) to change board, trigger, readout-window, channel, and window-level-control settings.
+
+For `packet_listener`, edit [apps/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/config.json:1) to change the UDP bind address, port, and packet parser settings. The listener prints parsed packet information in real time without event bundling.
+
+## Python/runtime requirements
+
+- `naludaq`
+- `pybind11`
+
+The library embeds Python and talks to `naludaq` at runtime, so the Python environment still needs to provide those modules.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).

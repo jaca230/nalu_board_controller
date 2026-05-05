@@ -10,6 +10,7 @@
 
 # Build and output directories
 /build/
+/cmake-build-*/
 /out/
 /bin/
 /lib/
@@ -56,6 +57,10 @@ venv/
 /docs/_build/
 /doc/_build/
 /doxygen/
+
+# Local analysis/reference material
+/context/
+/.artifacts/
 
 # Deprecated files and folders
 /deprecated/

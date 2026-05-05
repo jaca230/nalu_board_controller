@@ -1,39 +1,48 @@
 #!/bin/bash
 
-# Get the absolute path of the script directory
+set -euo pipefail
+
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
+PROJECT_DIR=$(realpath "$SCRIPT_DIR/..")
 
-# Default overwrite flag is false
 OVERWRITE=false
+BUILD_APPS=OFF
 
-# Parse arguments
+print_help() {
+    cat <<EOF
+Usage: ./scripts/build.sh [options]
+
+Configure and build the project.
+
+Options:
+  -o, --overwrite   Remove the existing build directory before configuring
+  --apps            Build opt-in apps in addition to the library
+  -h, --help        Show this help message
+EOF
+}
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -o|--overwrite) OVERWRITE=true; shift ;;
-        *) echo "Unknown option: $1"; exit 1 ;;
+        --apps) BUILD_APPS=ON; shift ;;
+        -h|--help) print_help; exit 0 ;;
+        *) echo "Unknown option: $1" >&2; echo; print_help; exit 1 ;;
     esac
 done
 
-# Build directory (relative to the script directory)
 BUILD_DIR="$SCRIPT_DIR/../build"
 
-# If overwrite flag is set, remove the build directory
 if [ "$OVERWRITE" = true ]; then
     echo "Overwrite flag set: Cleaning previous build..."
     rm -rf "$BUILD_DIR"
 fi
 
-# Create the build directory if it doesn't exist
 mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
 
-# Run CMake to configure the project
 echo "Configuring the project with CMake..."
-cmake "$SCRIPT_DIR/.."
+cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -DBUILD_APPS="$BUILD_APPS"
 
-# Build the project
 echo "Building the project..."
-make
+cmake --build "$BUILD_DIR" --parallel
 
-# Show the final binary and library
-echo "Build finished! Executable and libraries are in the bin/ and lib/ directories."
+echo "Build finished! Libraries are in lib/ and opt-in apps are in bin/."

@@ -1,0 +1,26 @@
+{
+  "logging": {
+    "level": "info"
+  },
+  "receiver": {
+    "address": "192.168.1.1",
+    "port": 12345,
+    "max_packet_size": 1040,
+    "timeout_sec": 2,
+    "udp_header_bytes": 16,
+    "validate_payload_size": true
+  },
+  "parser": {
+    "packet_size": 74,
+    "start_marker": "0E",
+    "stop_marker": "FA5A",
+    "chan_mask": 63,
+    "chan_shift": 0,
+    "abs_wind_mask": 63,
+    "evt_wind_mask": 63,
+    "evt_wind_shift": 6,
+    "timing_mask": 4095,
+    "timing_shift": 12,
+    "check_packet_integrity": true
+  }
+}

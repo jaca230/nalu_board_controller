@@ -1,0 +1,53 @@
+{
+  "logging": {
+    "level": "debug",
+    "python_level": "debug"
+  },
+  "board": {
+    "model": "HDSoCv1_evalr2",
+    "board_endpoint": "192.168.1.59:4660",
+    "host_endpoint": "192.168.1.1:4660",
+    "config_file": "",
+    "clock_file": ""
+  },
+  "capture": {
+    "target_endpoint": "192.168.1.1:12345",
+    "assign_dac_values": false,
+    "readout_window": {
+      "windows": 8,
+      "lookback": 8,
+      "write_after_trigger": 8,
+      "lookback_mode": "default"
+    },
+    "trigger": {
+      "mode": "ext",
+      "low_reference": 5,
+      "high_reference": 11,
+      "rising_edge": true
+    },
+    "window_level_control": {
+      "configure": false,
+      "enabled": false,
+      "reinitialize_after_change": true
+    },
+    "channels": {
+      "count": 32,
+      "defaults": {
+        "enabled": true,
+        "trigger_value": 0,
+        "dac_value": 1804
+      },
+      "overrides": {
+        "0": {
+          "trigger_value": 50
+        },
+        "1": {
+          "trigger_value": 50
+        },
+        "2": {
+          "trigger_value": 50
+        }
+      }
+    }
+  }
+}
