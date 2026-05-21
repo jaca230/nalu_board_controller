@@ -28,8 +28,8 @@
       "rising_edge": true
     },
     "window_level_control": {
-      "configure": true,
-      "enabled": true,
+      "configure": false,
+      "enabled": false,
       "reinitialize_after_change": true
     },
     "channels": {
