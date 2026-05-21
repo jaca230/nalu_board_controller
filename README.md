@@ -10,7 +10,7 @@
 - config structs split into separate headers for reflection-friendly use
 - direct `spdlog` usage instead of the old logger shim
 - window level control is now part of `CaptureConfig`
-- standalone apps live under `apps/` and are opt-in
+- standalone example apps live under `apps/examples/`
 - app-specific run and screening scripts live with each app
 
 ## Build
@@ -23,17 +23,16 @@
 
 This configures with CMake and builds the library in `build/`.
 
-### Apps
+### Example Apps
 
 ```bash
-./scripts/build.sh --apps
-./apps/manual_capture/scripts/build.sh
-./apps/manual_capture/scripts/run.sh
-./apps/packet_listener/scripts/build.sh
-./apps/packet_listener/scripts/run.sh
+./apps/examples/manual_capture/scripts/build.sh
+./apps/examples/manual_capture/scripts/run.sh
+./apps/examples/packet_listener/scripts/build.sh
+./apps/examples/packet_listener/scripts/run.sh
 ```
 
-Apps are not built by default.
+The root project builds only the library. Example apps are standalone mini-projects under `apps/examples/`.
 
 ### Install
 
@@ -97,35 +96,41 @@ src/runtime
 src/python
 src/types
 apps
-apps/manual_capture
-apps/packet_listener
+apps/examples/manual_capture
+apps/examples/packet_listener
 scripts
 ```
 
 ## Apps
 
+The `apps/examples/` tree is example/application code, not part of the installed library package. Keep app-specific runtime assets and Python dependencies there.
+
 `manual_capture`
 
-- executable: `build/bin/manual_capture`
-- config: [apps/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/config.json:1)
-- build script: [apps/manual_capture/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/build.sh:1)
-- run script: [apps/manual_capture/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/run.sh:1)
-- screening scripts: [apps/manual_capture/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/scripts/screening/stop.sh:1)
+- executable: `apps/examples/manual_capture/build/bin/manual_capture`
+- config: [apps/examples/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/config.json:1)
+- local Python requirements: [apps/examples/manual_capture/requirements.txt](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/requirements.txt:1)
+- Python setup script: [apps/examples/manual_capture/scripts/environment/setup_venv.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/environment/setup_venv.sh:1)
+- Python activation script: [apps/examples/manual_capture/scripts/environment/activate_venv.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/environment/activate_venv.sh:1)
+- build script: [apps/examples/manual_capture/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/build.sh:1)
+- run script: [apps/examples/manual_capture/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/run.sh:1)
+- screening scripts: [apps/examples/manual_capture/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/scripts/screening/stop.sh:1)
 
 `packet_listener`
 
-- executable: `build/bin/packet_listener`
-- config: [apps/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/config.json:1)
-- build script: [apps/packet_listener/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/build.sh:1)
-- run script: [apps/packet_listener/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/run.sh:1)
-- screening scripts: [apps/packet_listener/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/scripts/screening/stop.sh:1)
+- executable: `apps/examples/packet_listener/build/bin/packet_listener`
+- config: [apps/examples/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/config.json:1)
+- build script: [apps/examples/packet_listener/scripts/build.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/build.sh:1)
+- run script: [apps/examples/packet_listener/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/run.sh:1)
+- screening scripts: [apps/examples/packet_listener/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/screening/stop.sh:1)
 
 Top-level dispatcher:
 
 ```bash
-./apps/manual_capture/scripts/build.sh
+./apps/examples/manual_capture/scripts/build.sh
+./apps/examples/manual_capture/scripts/environment/setup_venv.sh
 ./scripts/run.sh manual_capture
-./apps/packet_listener/scripts/build.sh
+./apps/examples/packet_listener/scripts/build.sh
 ./scripts/run.sh packet_listener
 ```
 
@@ -162,16 +167,23 @@ Behavior:
 
 This is aimed primarily at HDSoCv1/HDSoCv2-style boards where the register is available. If the underlying board/register path does not support WLC, the operation will fail loudly instead of silently pretending it succeeded.
 
-For `manual_capture`, the executable now reads its settings from JSON instead of hardcoding them in `main.cpp`. Edit [apps/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/manual_capture/config.json:1) to change board, trigger, readout-window, channel, and window-level-control settings.
+For `manual_capture`, the executable now reads its settings from JSON instead of hardcoding them in `main.cpp`. Edit [apps/examples/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/config.json:1) to change board, trigger, readout-window, channel, and window-level-control settings. Its HDSoCv1 clock file now lives under `apps/examples/manual_capture/resources/`, alongside the rest of the app assets.
 
-For `packet_listener`, edit [apps/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/packet_listener/config.json:1) to change the UDP bind address, port, and packet parser settings. The listener prints parsed packet information in real time without event bundling.
+For `packet_listener`, edit [apps/examples/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/config.json:1) to change the UDP bind address, port, and packet parser settings. The listener prints parsed packet information in real time without event bundling.
 
 ## Python/runtime requirements
 
-- `naludaq`
-- `pybind11`
+The library embeds Python and talks to `naludaq` at runtime, but this repo now treats the Python environment as an application concern.
 
-The library embeds Python and talks to `naludaq` at runtime, so the Python environment still needs to provide those modules.
+For the bundled `manual_capture` app:
+
+```bash
+./apps/examples/manual_capture/scripts/environment/setup_venv.sh
+source ./apps/examples/manual_capture/scripts/environment/activate_venv.sh
+./apps/examples/manual_capture/scripts/run.sh
+```
+
+`run.sh` already handles the app-local environment automatically. `activate_venv.sh` is only for interactive shell work when you want to inspect or run Python commands manually inside the same environment.
 
 ## License
 

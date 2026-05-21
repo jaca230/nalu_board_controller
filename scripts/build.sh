@@ -6,7 +6,6 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 PROJECT_DIR=$(realpath "$SCRIPT_DIR/..")
 
 OVERWRITE=false
-BUILD_APPS=OFF
 
 print_help() {
     cat <<EOF
@@ -16,7 +15,6 @@ Configure and build the project.
 
 Options:
   -o, --overwrite   Remove the existing build directory before configuring
-  --apps            Build opt-in apps in addition to the library
   -h, --help        Show this help message
 EOF
 }
@@ -24,7 +22,6 @@ EOF
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -o|--overwrite) OVERWRITE=true; shift ;;
-        --apps) BUILD_APPS=ON; shift ;;
         -h|--help) print_help; exit 0 ;;
         *) echo "Unknown option: $1" >&2; echo; print_help; exit 1 ;;
     esac
@@ -40,9 +37,9 @@ fi
 mkdir -p "$BUILD_DIR"
 
 echo "Configuring the project with CMake..."
-cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -DBUILD_APPS="$BUILD_APPS"
+cmake -S "$PROJECT_DIR" -B "$BUILD_DIR"
 
 echo "Building the project..."
 cmake --build "$BUILD_DIR" --parallel
 
-echo "Build finished! Libraries are in lib/ and opt-in apps are in bin/."
+echo "Build finished! Library artifacts are in build/lib/."

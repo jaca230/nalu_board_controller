@@ -22,5 +22,9 @@
     "timing_mask": 4095,
     "timing_shift": 12,
     "check_packet_integrity": true
+  },
+  "sampling": {
+    "packet_limit": 0,
+    "summary_only": false
   }
 }

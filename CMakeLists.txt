@@ -18,9 +18,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 option(USE_EXTERNAL_SPDLOG "Use system-installed spdlog" OFF)
 option(USE_EXTERNAL_PYBIND11 "Use system-installed pybind11" OFF)
-option(USE_EXTERNAL_NLOHMANN_JSON "Use system-installed nlohmann_json" OFF)
-option(BUILD_APPS "Build standalone apps" OFF)
-
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
@@ -33,8 +30,6 @@ endif()
 
 set(CPM_SPDLOG_VERSION "1.13.0" CACHE STRING "spdlog version")
 set(CPM_PYBIND11_VERSION "2.13.6" CACHE STRING "pybind11 version")
-set(CPM_NLOHMANN_JSON_VERSION "3.11.3" CACHE STRING "nlohmann_json version")
-
 if(USE_EXTERNAL_SPDLOG)
   find_package(spdlog REQUIRED)
   add_library(nalu_board_controller_spdlog INTERFACE)
@@ -71,27 +66,6 @@ else()
   )
 endif()
 
-if(BUILD_APPS)
-  if(USE_EXTERNAL_NLOHMANN_JSON)
-    find_package(nlohmann_json CONFIG REQUIRED)
-    add_library(nalu_board_controller_nlohmann_json INTERFACE)
-    target_link_libraries(nalu_board_controller_nlohmann_json INTERFACE nlohmann_json::nlohmann_json)
-  else()
-    CPMAddPackage(
-      NAME nlohmann_json
-      GITHUB_REPOSITORY nlohmann/json
-      VERSION ${CPM_NLOHMANN_JSON_VERSION}
-      DOWNLOAD_ONLY YES
-    )
-
-    add_library(nalu_board_controller_nlohmann_json INTERFACE)
-    target_include_directories(nalu_board_controller_nlohmann_json INTERFACE
-      $<BUILD_INTERFACE:${nlohmann_json_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    )
-  endif()
-endif()
-
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
@@ -119,10 +93,6 @@ target_link_libraries(${PROJECT_NAME}
     nalu_board_controller_spdlog
 )
 
-if(BUILD_APPS)
-  add_subdirectory(apps)
-endif()
-
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
   install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
@@ -134,10 +104,6 @@ if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
 
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  )
-
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}
   )
 
   install(EXPORT ${PROJECT_NAME}Targets

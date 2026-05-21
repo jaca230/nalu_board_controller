@@ -7,7 +7,6 @@ PROJECT_DIR=$(realpath "$SCRIPT_DIR/..")
 
 INSTALL_PREFIX="/usr/local"
 OVERWRITE=false
-BUILD_APPS=OFF
 
 print_help() {
     cat <<EOF
@@ -18,7 +17,6 @@ Configure, build, and install the project.
 Options:
   -p, --prefix DIR  Install prefix (default: /usr/local)
   -o, --overwrite   Remove the existing build directory before configuring
-  --apps            Build opt-in apps in addition to the library
   -h, --help        Show this help message
 EOF
 }
@@ -27,7 +25,6 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         -o|--overwrite) OVERWRITE=true; shift ;;
         -p|--prefix) INSTALL_PREFIX="$2"; shift 2 ;;
-        --apps) BUILD_APPS=ON; shift ;;
         -h|--help) print_help; exit 0 ;;
         *) echo "Unknown option: $1" >&2; echo; print_help; exit 1 ;;
     esac
@@ -44,8 +41,7 @@ mkdir -p "$BUILD_DIR"
 
 echo "Configuring the project with CMake..."
 cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" \
-    -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
-    -DBUILD_APPS="$BUILD_APPS"
+    -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
 echo "Building the project..."
 cmake --build "$BUILD_DIR" --parallel

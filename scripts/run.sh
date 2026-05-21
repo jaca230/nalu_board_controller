@@ -12,13 +12,13 @@ Usage: ./scripts/run.sh <app> [app options]
 Run one of the app-specific launchers.
 
 Apps:
-  manual_capture   Launch apps/manual_capture/scripts/run.sh
-  packet_listener  Launch apps/packet_listener/scripts/run.sh
+  manual_capture   Launch apps/examples/manual_capture/scripts/run.sh
+  packet_listener  Launch apps/examples/packet_listener/scripts/run.sh
 
 Examples:
-  ./apps/manual_capture/scripts/build.sh
+  ./apps/examples/manual_capture/scripts/build.sh
   ./scripts/run.sh manual_capture
-  ./apps/packet_listener/scripts/build.sh
+  ./apps/examples/packet_listener/scripts/build.sh
   ./scripts/run.sh packet_listener
 EOF
 }
@@ -36,7 +36,7 @@ case "$1" in
     manual_capture|packet_listener)
         APP_NAME="$1"
         shift
-        APP_RUNNER="$PROJECT_DIR/apps/$APP_NAME/scripts/run.sh"
+        APP_RUNNER="$PROJECT_DIR/apps/examples/$APP_NAME/scripts/run.sh"
         if [ ! -x "$APP_RUNNER" ]; then
             echo "App runner not found or not executable: $APP_RUNNER" >&2
             exit 1

@@ -6,7 +6,7 @@ SESSION_NAME="packet_listener"
 
 print_help() {
     cat <<EOF
-Usage: ./apps/packet_listener/scripts/screening/stop.sh [options]
+Usage: ./apps/examples/packet_listener/scripts/screening/stop.sh [options]
 
 Stop the detached packet_listener screen session.
 

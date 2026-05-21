@@ -57,7 +57,6 @@ void PythonBackend::clear_python_objects() {
 }
 
 void PythonBackend::sync_python_logging(int level) {
-    spdlog::set_level(logging::level_from_python(level));
     try {
         py::module_ logging_module = py::module_::import("logging");
         py::object logger = logging_module.attr("getLogger")();
@@ -74,7 +73,6 @@ void PythonBackend::sync_python_logging(int level) {
 }
 
 void PythonBackend::sync_python_logging(const std::string& level) {
-    spdlog::set_level(spdlog::level::from_str(level));
     try {
         py::module_ logging_module = py::module_::import("logging");
         py::object logger = logging_module.attr("getLogger")();
@@ -92,9 +90,14 @@ void PythonBackend::sync_python_logging(const std::string& level) {
 
 void PythonBackend::initialize_board() {
     try {
+        py::module_ naludaq = py::module_::import("naludaq");
         py::module_ naludaq_board = py::module_::import("naludaq.board");
         py::module_ naludaq_comm = py::module_::import("naludaq.communication");
         py::module_ naludaq_conn = py::module_::import("naludaq.controllers");
+
+        const std::string naludaq_version = py::str(naludaq.attr("__version__"));
+        const std::string naludaq_path = py::str(naludaq.attr("__file__"));
+        spdlog::info("Using naludaq {} from {}", naludaq_version, naludaq_path);
 
         board_ = naludaq_board.attr("Board")(state_->model());
         board_.attr("get_udp_connection")(

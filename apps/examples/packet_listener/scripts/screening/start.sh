@@ -10,16 +10,18 @@ SESSION_NAME="packet_listener"
 CONFIG_PATH="$APP_DIR/config.json"
 BUILD=false
 OVERWRITE=false
+SAMPLE_COUNT=""
 
 print_help() {
     cat <<EOF
-Usage: ./apps/packet_listener/scripts/screening/start.sh [options]
+Usage: ./apps/examples/packet_listener/scripts/screening/start.sh [options]
 
 Start packet_listener in a detached screen session.
 
 Options:
   --session NAME    Screen session name (default: packet_listener)
   --config PATH     Path to config.json
+  --sample-count N  Stop after parsing N packets and print a summary
   --build           Build apps before starting
   --overwrite       When used with --build, clean the build directory first
   -h, --help        Show this help message
@@ -30,6 +32,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --session) SESSION_NAME="$2"; shift 2 ;;
         --config) CONFIG_PATH="$2"; shift 2 ;;
+        --sample-count) SAMPLE_COUNT="$2"; shift 2 ;;
         --build) BUILD=true; shift ;;
         --overwrite) OVERWRITE=true; shift ;;
         -h|--help) print_help; exit 0 ;;
@@ -38,6 +41,9 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 RUN_ARGS=(--config "$CONFIG_PATH")
+if [ -n "$SAMPLE_COUNT" ]; then
+    RUN_ARGS+=(--sample-count "$SAMPLE_COUNT")
+fi
 if [ "$BUILD" = true ]; then
     BUILD_ARGS=()
     if [ "$OVERWRITE" = true ]; then

@@ -1,0 +1,2 @@
+naludaq==0.36.0
+naluconfigs==18.0.1

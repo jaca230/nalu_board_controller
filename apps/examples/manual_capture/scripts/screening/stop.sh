@@ -6,7 +6,7 @@ SESSION_NAME="manual_capture"
 
 print_help() {
     cat <<EOF
-Usage: ./apps/manual_capture/scripts/screening/stop.sh [options]
+Usage: ./apps/examples/manual_capture/scripts/screening/stop.sh [options]
 
 Stop the detached manual_capture screen session.
 

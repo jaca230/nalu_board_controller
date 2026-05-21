@@ -1,7 +1,7 @@
 {
   "logging": {
     "level": "debug",
-    "python_level": "debug"
+    "python_level": "info"
   },
   "board": {
     "model": "HDSoCv1_evalr2",
@@ -9,45 +9,35 @@
     "host_endpoint": "192.168.1.1:4660",
     "asic_serial_mode": false,
     "config_file": "",
-    "clock_file": "../../resources/clocks/Si5341-RevD-HDSoC_31_25SYSclk_15_625SSTclk_400GccClk_156_25TxClk_31_25TxDivClk-Registers.txt"
+    "clock_file": "",
+    "clock_file_old": "resources/clocks/Si5341-RevD-HDSoC_31_25SYSclk_15_625SSTclk_400GccClk_156_25TxClk_31_25TxDivClk-Registers.txt"
   },
   "capture": {
     "target_endpoint": "192.168.1.1:12345",
     "assign_dac_values": false,
     "readout_window": {
-      "windows": 8,
-      "lookback": 8,
-      "write_after_trigger": 8,
+      "windows": 2,
+      "lookback": 2,
+      "write_after_trigger": 2,
       "lookback_mode": "default"
     },
     "trigger": {
-      "mode": "ext",
+      "mode": "self",
       "low_reference": 5,
       "high_reference": 11,
       "rising_edge": true
     },
     "window_level_control": {
-      "configure": false,
-      "enabled": false,
+      "configure": true,
+      "enabled": true,
       "reinitialize_after_change": true
     },
     "channels": {
       "count": 32,
       "defaults": {
         "enabled": true,
-        "trigger_value": 0,
+        "trigger_value": 50,
         "dac_value": 1804
-      },
-      "overrides": {
-        "0": {
-          "trigger_value": 50
-        },
-        "1": {
-          "trigger_value": 50
-        },
-        "2": {
-          "trigger_value": 50
-        }
       }
     }
   }

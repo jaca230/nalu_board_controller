@@ -9,7 +9,7 @@
 *.lock
 
 # Build and output directories
-/build/
+build/
 /cmake-build-*/
 /out/
 /bin/
@@ -51,6 +51,7 @@ node_modules/
 package-lock.json
 yarn.lock
 venv/
+.venv/
 .env
 
 # Generated documentation

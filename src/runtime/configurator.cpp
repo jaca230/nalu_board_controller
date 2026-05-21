@@ -69,7 +69,9 @@ void Configurator::configure_board_mode() {
 
 void Configurator::configure_triggers() {
     if (state_->trigger().mode != "self") {
-        spdlog::debug("Trigger mode '{}' does not need self-trigger configuration", state_->trigger().mode);
+        spdlog::debug(
+            "Skipping trigger-controller programming for readout mode '{}'",
+            state_->trigger().mode);
         return;
     }
 
@@ -96,10 +98,11 @@ void Configurator::configure_triggers() {
         trigger_controller.attr("set_trigger_edge")(py::str("left"), state_->trigger().rising_edge);
         trigger_controller.attr("set_trigger_edge")(py::str("right"), state_->trigger().rising_edge);
 
-        spdlog::debug("Configured self-trigger values {} with references {}-{}",
+        spdlog::debug("Configured trigger values {} with references {}-{} for readout mode '{}'",
                       join_ints(state_->trigger_values()),
                       state_->trigger().low_reference,
-                      state_->trigger().high_reference);
+                      state_->trigger().high_reference,
+                      state_->trigger().mode);
     } catch (const py::error_already_set& error) {
         spdlog::error("Trigger configuration failed: {}", error.what());
         throw;
