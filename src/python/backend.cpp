@@ -128,6 +128,13 @@ void PythonBackend::initialize_board() {
         analog_registers_ = naludaq_comm.attr("AnalogRegisters")(board_);
         digital_registers_ = naludaq_comm.attr("DigitalRegisters")(board_);
 
+        const auto& window_level_control = state_->window_level_control();
+        if (window_level_control.configure) {
+            digital_registers_.attr("write")("wlc_on", window_level_control.enabled ? 1 : 0);
+            spdlog::info("Preparing WLC mode during board initialization: enabled={}",
+                         window_level_control.enabled);
+        }
+
         naludaq_board.attr("startup_board")(board_);
         spdlog::info("Board '{}' initialized successfully", state_->model());
     } catch (const py::error_already_set& error) {

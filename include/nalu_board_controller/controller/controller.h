@@ -24,6 +24,7 @@ public:
 
     void sync_python_logging(int level = 20);
     void sync_python_logging(const std::string& level);
+    void set_window_level_control(const WindowLevelControlConfig& config);
     void initialize_board();
 
     void start_capture(const CaptureConfig& config);

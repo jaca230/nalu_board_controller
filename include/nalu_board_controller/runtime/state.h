@@ -38,7 +38,16 @@ public:
     const std::vector<int>& dac_values() const { return dac_values_; }
     bool assign_dac_values() const { return assign_dac_values_; }
     const WindowLevelControlConfig& window_level_control() const { return window_level_control_; }
+    const WindowLevelControlConfig& initialized_window_level_control() const {
+        return initialized_window_level_control_;
+    }
+    bool has_initialized_window_level_control() const { return has_initialized_window_level_control_; }
 
+    void set_window_level_control(const WindowLevelControlConfig& config) { window_level_control_ = config; }
+    void mark_initialized_window_level_control() {
+        initialized_window_level_control_ = window_level_control_;
+        has_initialized_window_level_control_ = true;
+    }
     void update_from_capture_config(const CaptureConfig& config);
 
 private:
@@ -59,6 +68,8 @@ private:
     std::vector<int> dac_values_;
     bool assign_dac_values_ = false;
     WindowLevelControlConfig window_level_control_;
+    WindowLevelControlConfig initialized_window_level_control_;
+    bool has_initialized_window_level_control_ = false;
 };
 
 }  // namespace nalu_board_controller

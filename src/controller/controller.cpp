@@ -50,8 +50,13 @@ void Controller::sync_python_logging(const std::string& level) {
     python_backend_->sync_python_logging(level);
 }
 
+void Controller::set_window_level_control(const WindowLevelControlConfig& config) {
+    state_->set_window_level_control(config);
+}
+
 void Controller::initialize_board() {
     python_backend_->initialize_board();
+    state_->mark_initialized_window_level_control();
     state_->set_initialized(true);
 }
 
