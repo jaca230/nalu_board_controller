@@ -26,6 +26,7 @@ public:
     void initialize_board();
     void start_capture();
     void stop_capture();
+    std::string read_firmware_version() const;
     void enable_ethernet();
     void enable_serial();
     void apply_wlc(const WindowLevelControlConfig& config);

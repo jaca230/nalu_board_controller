@@ -1,5 +1,6 @@
 #include "nalu_board_controller/python/backend.h"
 
+#include <sstream>
 #include <stdexcept>
 
 #include <spdlog/spdlog.h>
@@ -135,7 +136,28 @@ void PythonBackend::initialize_board() {
                          window_level_control.enabled);
         }
 
-        naludaq_board.attr("startup_board")(board_);
+        py::list startup_status;
+        const bool startup_ok =
+            naludaq_board.attr("startup_board")(board_, py::arg("stat") = startup_status)
+                .cast<bool>();
+        if (!startup_ok) {
+            std::ostringstream message;
+            message << "startup_board() returned false";
+            if (py::len(startup_status) > 0) {
+                message << " with status:";
+                for (const auto& entry : startup_status) {
+                    try {
+                        const py::tuple status = entry.cast<py::tuple>();
+                        if (py::len(status) >= 2) {
+                            message << " [" << py::str(status[0]).cast<std::string>() << "] "
+                                    << py::str(status[1]).cast<std::string>();
+                        }
+                    } catch (const py::cast_error&) {
+                    }
+                }
+            }
+            throw std::runtime_error(message.str());
+        }
         spdlog::info("Board '{}' initialized successfully", state_->model());
     } catch (const py::error_already_set& error) {
         spdlog::error("Board initialization failed: {}", error.what());
@@ -209,6 +231,18 @@ void PythonBackend::stop_capture() {
         }
     } catch (const py::error_already_set& error) {
         spdlog::error("Stop capture failed: {}", error.what());
+        throw;
+    }
+}
+
+std::string PythonBackend::read_firmware_version() const {
+    try {
+        if (!board_controller_ || board_controller_.is_none()) {
+            throw std::runtime_error("Board controller is not initialized");
+        }
+        return py::str(board_controller_.attr("read_firmware_version")()).cast<std::string>();
+    } catch (const py::error_already_set& error) {
+        spdlog::error("Read firmware version failed: {}", error.what());
         throw;
     }
 }

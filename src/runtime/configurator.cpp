@@ -166,23 +166,35 @@ void Configurator::configure_readout() {
     try {
         auto& readout_controller = python_backend_->readout_controller();
         const auto& readout_window = state_->readout_window();
+        const auto& enabled_channels = state_->enabled_channels();
+        const auto& channel_settings = state_->channel_settings();
+        const bool all_channels_enabled =
+            !channel_settings.empty() && enabled_channels.size() == channel_settings.size();
 
-        py::list py_channels;
-        for (int channel : state_->enabled_channels()) {
-            py_channels.append(channel);
+        if (all_channels_enabled) {
+            spdlog::debug(
+                "Skipping readout-channel programming because all {} configured channels are enabled",
+                enabled_channels.size());
+        } else {
+            py::list py_channels;
+            for (int channel : enabled_channels) {
+                py_channels.append(channel);
+            }
+
+            readout_controller.attr("set_readout_channels")(py_channels);
+            spdlog::debug("Configured readout channels {}", join_ints(enabled_channels));
         }
 
-        readout_controller.attr("set_readout_channels")(py_channels);
         readout_controller.attr("set_read_window")(
             readout_window.windows,
             readout_window.lookback,
             readout_window.write_after_trigger);
 
-        spdlog::debug("Configured readout channels {} and window ({}, {}, {})",
-                      join_ints(state_->enabled_channels()),
+        spdlog::debug("Configured readout window ({}, {}, {}) for {} enabled channels",
                       readout_window.windows,
                       readout_window.lookback,
-                      readout_window.write_after_trigger);
+                      readout_window.write_after_trigger,
+                      enabled_channels.size());
     } catch (const py::error_already_set& error) {
         spdlog::error("Readout controller configuration failed: {}", error.what());
         throw;

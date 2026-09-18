@@ -60,6 +60,10 @@ void Controller::initialize_board() {
     state_->set_initialized(true);
 }
 
+std::string Controller::read_firmware_version() const {
+    return python_backend_->read_firmware_version();
+}
+
 void Controller::start_capture(const CaptureConfig& config) {
     init_capture(config);
     python_backend_->start_capture();

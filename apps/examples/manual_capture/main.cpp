@@ -193,6 +193,7 @@ int main(int argc, char** argv) {
         nalu_board_controller::Controller controller(board_config);
         controller.initialize_board();
         controller.sync_python_logging(python_level);
+        spdlog::info("Board firmware version: {}", controller.read_firmware_version());
 
         spdlog::info("Starting board capture using config '{}'", config_path);
         controller.start_capture(capture_config);

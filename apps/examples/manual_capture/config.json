@@ -22,7 +22,7 @@
       "lookback_mode": "default"
     },
     "trigger": {
-      "mode": "self",
+      "mode": "ext",
       "low_reference": 5,
       "high_reference": 11,
       "rising_edge": true
