@@ -24,6 +24,7 @@ public:
     void sync_python_logging(int level);
     void sync_python_logging(const std::string& level);
     void initialize_board();
+    void ensure_control_connection();
     void start_capture();
     void stop_capture();
     std::string read_firmware_version() const;
@@ -45,6 +46,9 @@ private:
     void finalize_interpreter();
     void clear_python_objects();
     void restart_board();
+    void connect_verified_udp_board(bool fresh_board);
+    bool wait_for_identifier(int attempts);
+    void startup_board_with_retries();
 
     State* state_;
     py::object board_;

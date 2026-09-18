@@ -56,7 +56,6 @@ void Configurator::configure_for_capture() {
     configure_triggers();
     configure_dac_values();
     configure_readout();
-    configure_connection();
     spdlog::debug("Capture configuration completed");
 }
 
@@ -123,6 +122,12 @@ void Configurator::configure_triggers() {
 
         trigger_controller.attr("set_trigger_edge")(py::str("left"), state_->trigger().rising_edge);
         trigger_controller.attr("set_trigger_edge")(py::str("right"), state_->trigger().rising_edge);
+        if (py::hasattr(trigger_controller, "tsel")) {
+            py::dict trigger_select;
+            trigger_select["left"] = true;
+            trigger_select["right"] = true;
+            trigger_controller.attr("tsel") = trigger_select;
+        }
 
         spdlog::debug("Configured trigger values {} with references {}-{} for readout mode '{}'",
                       join_ints(state_->trigger_values()),
@@ -167,28 +172,24 @@ void Configurator::configure_readout() {
         auto& readout_controller = python_backend_->readout_controller();
         const auto& readout_window = state_->readout_window();
         const auto& enabled_channels = state_->enabled_channels();
-        const auto& channel_settings = state_->channel_settings();
-        const bool all_channels_enabled =
-            !channel_settings.empty() && enabled_channels.size() == channel_settings.size();
-
-        if (all_channels_enabled) {
-            spdlog::debug(
-                "Skipping readout-channel programming because all {} configured channels are enabled",
-                enabled_channels.size());
-        } else {
-            py::list py_channels;
-            for (int channel : enabled_channels) {
-                py_channels.append(channel);
-            }
-
-            readout_controller.attr("set_readout_channels")(py_channels);
-            spdlog::debug("Configured readout channels {}", join_ints(enabled_channels));
+        py::list py_channels;
+        for (int channel : enabled_channels) {
+            py_channels.append(channel);
         }
+        readout_controller.attr("set_readout_channels")(py_channels);
+        spdlog::debug("Configured readout channels {}", join_ints(enabled_channels));
 
         readout_controller.attr("set_read_window")(
             readout_window.windows,
             readout_window.lookback,
             readout_window.write_after_trigger);
+
+        if (state_->readoutchannels_register() >= 0) {
+            python_backend_->digital_registers().attr("write")(
+                "readoutchannels", state_->readoutchannels_register());
+            spdlog::debug("Set digital readoutchannels register to {}",
+                          state_->readoutchannels_register());
+        }
 
         spdlog::debug("Configured readout window ({}, {}, {}) for {} enabled channels",
                       readout_window.windows,
@@ -197,16 +198,6 @@ void Configurator::configure_readout() {
                       enabled_channels.size());
     } catch (const py::error_already_set& error) {
         spdlog::error("Readout controller configuration failed: {}", error.what());
-        throw;
-    }
-}
-
-void Configurator::configure_connection() {
-    try {
-        python_backend_->connection_controller().attr("_configure_ethernet")();
-        spdlog::debug("Ethernet connection configured");
-    } catch (const py::error_already_set& error) {
-        spdlog::error("Connection configuration failed: {}", error.what());
         throw;
     }
 }

@@ -14,15 +14,16 @@
   },
   "capture": {
     "target_endpoint": "192.168.1.1:12345",
-    "assign_dac_values": false,
+    "assign_dac_values": true,
+    "readoutchannels_register": 57,
     "readout_window": {
-      "windows": 2,
-      "lookback": 2,
-      "write_after_trigger": 2,
-      "lookback_mode": "default"
+      "windows": 1,
+      "lookback": 1,
+      "write_after_trigger": 1,
+      "lookback_mode": "trigrel"
     },
     "trigger": {
-      "mode": "ext",
+      "mode": "self",
       "low_reference": 5,
       "high_reference": 11,
       "rising_edge": true
@@ -35,9 +36,27 @@
     "channels": {
       "count": 32,
       "defaults": {
-        "enabled": true,
-        "trigger_value": 50,
+        "enabled": false,
+        "trigger_value": 1,
         "dac_value": 1804
+      },
+      "overrides": {
+        "0": {"enabled": true},
+        "1": {"enabled": true},
+        "2": {"enabled": true},
+        "3": {"enabled": true},
+        "4": {"enabled": true},
+        "5": {"enabled": true},
+        "6": {"enabled": true},
+        "7": {"enabled": true},
+        "8": {"enabled": true},
+        "9": {"enabled": true},
+        "10": {"enabled": true},
+        "11": {"enabled": true},
+        "12": {"enabled": true},
+        "13": {"enabled": true},
+        "14": {"enabled": true},
+        "15": {"enabled": true}
       }
     }
   }

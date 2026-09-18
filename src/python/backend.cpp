@@ -1,7 +1,9 @@
 #include "nalu_board_controller/python/backend.h"
 
+#include <chrono>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 
 #include <spdlog/spdlog.h>
 
@@ -17,6 +19,19 @@ void set_python_root_level(py::module_& logging, const py::object& logger, const
                                        level == "error" ? "ERROR" :
                                        level == "debug" ? "DEBUG" : "INFO");
     logger.attr("setLevel")(py_level);
+}
+
+void ping_board(const std::string& ip) {
+    try {
+        py::module_ subprocess = py::module_::import("subprocess");
+        subprocess.attr("run")(
+            py::make_tuple("ping", "-c", "1", "-W", "1", ip),
+            py::arg("stdout") = subprocess.attr("DEVNULL"),
+            py::arg("stderr") = subprocess.attr("DEVNULL"),
+            py::arg("check") = false);
+    } catch (const py::error_already_set& error) {
+        spdlog::debug("Could not ping board {}: {}", ip, error.what());
+    }
 }
 
 }  // namespace
@@ -89,6 +104,100 @@ void PythonBackend::sync_python_logging(const std::string& level) {
     }
 }
 
+bool PythonBackend::wait_for_identifier(int attempts) {
+    py::object registers = py::module_::import("naludaq.communication").attr("ControlRegisters")(board_);
+    for (int attempt = 1; attempt <= attempts; ++attempt) {
+        ping_board(state_->board_address().getIp());
+        try {
+            py::dict response = registers.attr("read")("identifier").cast<py::dict>();
+            const int identifier = response["value"].cast<int>();
+            if (identifier == 0x4D5C) {
+                spdlog::info("Board identifier verified: {} (0x4D5C)", identifier);
+                return true;
+            }
+            spdlog::debug("Identifier attempt {}/{} returned {}", attempt, attempts, identifier);
+        } catch (const py::error_already_set& error) {
+            spdlog::debug("Identifier attempt {}/{} failed: {}", attempt, attempts, error.what());
+        }
+        if (attempt < attempts) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    return false;
+}
+
+void PythonBackend::connect_verified_udp_board(bool fresh_board) {
+    py::module_ naludaq_board = py::module_::import("naludaq.board");
+    constexpr int connection_attempts = 3;
+    for (int attempt = 1; attempt <= connection_attempts; ++attempt) {
+        if (fresh_board) {
+            board_ = naludaq_board.attr("Board")(state_->model());
+        } else {
+            board_.attr("disconnect")();
+        }
+        ping_board(state_->board_address().getIp());
+        try {
+            board_.attr("get_udp_connection")(
+                py::make_tuple(state_->board_address().getIp(), state_->board_address().getPort()),
+                py::make_tuple(state_->host_address().getIp(), state_->host_address().getPort()));
+            if (wait_for_identifier(5)) {
+                return;
+            }
+        } catch (const py::error_already_set& error) {
+            spdlog::warn("UDP connection attempt {}/{} failed: {}",
+                         attempt, connection_attempts, error.what());
+        }
+        board_.attr("disconnect")();
+        if (attempt < connection_attempts) {
+            spdlog::warn("UDP connection attempt {}/{} returned no valid identifier; reconnecting",
+                         attempt, connection_attempts);
+        }
+    }
+    throw std::runtime_error("Board did not return identifier 19804 (0x4D5C) after UDP reconnects");
+}
+
+void PythonBackend::ensure_control_connection() {
+    if (!board_ || board_.is_none()) {
+        throw std::runtime_error("Board not initialized. Call initialize_board() first.");
+    }
+    if (!wait_for_identifier(1)) {
+        spdlog::warn("UDP control connection is not responding before capture; reconnecting");
+        connect_verified_udp_board(false);
+    }
+}
+
+void PythonBackend::startup_board_with_retries() {
+    py::module_ naludaq_board = py::module_::import("naludaq.board");
+    py::list startup_status;
+    constexpr int startup_attempts = 10;
+    for (int attempt = 1; attempt <= startup_attempts; ++attempt) {
+        startup_status = py::list();
+        if (naludaq_board.attr("startup_board")(
+                board_, py::arg("stat") = startup_status).cast<bool>()) {
+            spdlog::info("startup_board succeeded on attempt {}/{}", attempt, startup_attempts);
+            return;
+        }
+        spdlog::warn("startup_board attempt {}/{} returned false", attempt, startup_attempts);
+        if (attempt < startup_attempts) {
+            ping_board(state_->board_address().getIp());
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    std::ostringstream message;
+    message << "startup_board() returned false after " << startup_attempts << " attempts";
+    for (const auto& entry : startup_status) {
+        try {
+            const py::tuple status = entry.cast<py::tuple>();
+            if (py::len(status) >= 2) {
+                message << " [" << py::str(status[0]).cast<std::string>() << "] "
+                        << py::str(status[1]).cast<std::string>();
+            }
+        } catch (const py::cast_error&) {
+        }
+    }
+    throw std::runtime_error(message.str());
+}
+
 void PythonBackend::initialize_board() {
     try {
         py::module_ naludaq = py::module_::import("naludaq");
@@ -100,10 +209,7 @@ void PythonBackend::initialize_board() {
         const std::string naludaq_path = py::str(naludaq.attr("__file__"));
         spdlog::info("Using naludaq {} from {}", naludaq_version, naludaq_path);
 
-        board_ = naludaq_board.attr("Board")(state_->model());
-        board_.attr("get_udp_connection")(
-            py::make_tuple(state_->board_address().getIp(), state_->board_address().getPort()),
-            py::make_tuple(state_->host_address().getIp(), state_->host_address().getPort()));
+        connect_verified_udp_board(true);
 
         board_.attr("params").attr("__setitem__")("serial_mode", py::bool_(state_->asic_serial_mode()));
         spdlog::info("Using startup settings: asic_serial_mode={}, clock_file={}",
@@ -136,28 +242,7 @@ void PythonBackend::initialize_board() {
                          window_level_control.enabled);
         }
 
-        py::list startup_status;
-        const bool startup_ok =
-            naludaq_board.attr("startup_board")(board_, py::arg("stat") = startup_status)
-                .cast<bool>();
-        if (!startup_ok) {
-            std::ostringstream message;
-            message << "startup_board() returned false";
-            if (py::len(startup_status) > 0) {
-                message << " with status:";
-                for (const auto& entry : startup_status) {
-                    try {
-                        const py::tuple status = entry.cast<py::tuple>();
-                        if (py::len(status) >= 2) {
-                            message << " [" << py::str(status[0]).cast<std::string>() << "] "
-                                    << py::str(status[1]).cast<std::string>();
-                        }
-                    } catch (const py::cast_error&) {
-                    }
-                }
-            }
-            throw std::runtime_error(message.str());
-        }
+        startup_board_with_retries();
         spdlog::info("Board '{}' initialized successfully", state_->model());
     } catch (const py::error_already_set& error) {
         spdlog::error("Board initialization failed: {}", error.what());
@@ -167,9 +252,8 @@ void PythonBackend::initialize_board() {
 
 void PythonBackend::restart_board() {
     try {
-        py::module_ naludaq_board = py::module_::import("naludaq.board");
         board_controller_.attr("reset_board")();
-        naludaq_board.attr("startup_board")(board_);
+        startup_board_with_retries();
         spdlog::debug("Board reinitialized from current register state");
     } catch (const py::error_already_set& error) {
         spdlog::error("Board reinitialization failed: {}", error.what());
@@ -206,6 +290,13 @@ void PythonBackend::start_capture() {
             py::make_tuple(state_->target_address().getIp(), state_->target_address().getPort()));
 
         connection_controller_.attr("_configure_ethernet")();
+
+        // Firmware 959 needs time to apply the new UDP destination before
+        // it will reliably accept the readout-start command.
+        constexpr auto receiver_settle_delay = std::chrono::seconds(2);
+        spdlog::info("Waiting {} seconds for UDP destination to settle before readout",
+                     receiver_settle_delay.count());
+        std::this_thread::sleep_for(receiver_settle_delay);
 
         const auto& readout_window = state_->readout_window();
         if (!readout_window.lookback_mode.empty() && readout_window.lookback_mode != "default") {

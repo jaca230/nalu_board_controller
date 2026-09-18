@@ -24,7 +24,6 @@ private:
     void configure_triggers();
     void configure_dac_values();
     void configure_readout();
-    void configure_connection();
 
     State* state_;
     PythonBackend* python_backend_;

@@ -96,6 +96,7 @@ nalu_board_controller::CaptureConfig parse_capture_config(const json& object) {
     nalu_board_controller::CaptureConfig config;
     assign_if_present(object, "target_endpoint", config.target_endpoint);
     assign_if_present(object, "assign_dac_values", config.assign_dac_values);
+    assign_if_present(object, "readoutchannels_register", config.readoutchannels_register);
 
     if (const auto readout_it = object.find("readout_window");
         readout_it != object.end() && readout_it->is_object()) {

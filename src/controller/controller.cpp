@@ -118,6 +118,7 @@ void Controller::init_capture(const CaptureConfig& config) {
         throw std::runtime_error("Board not initialized");
     }
 
+    python_backend_->ensure_control_connection();
     state_->update_from_capture_config(config);
     configurator_->configure_for_capture();
 }

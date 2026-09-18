@@ -42,4 +42,10 @@ cmake -S "$PROJECT_DIR" -B "$BUILD_DIR"
 echo "Building the project..."
 cmake --build "$BUILD_DIR" --parallel
 
+MANUAL_CAPTURE_BUILD_DIR="$PROJECT_DIR/apps/examples/manual_capture/build"
+if [ -f "$MANUAL_CAPTURE_BUILD_DIR/CMakeCache.txt" ]; then
+    echo "Updating the existing manual_capture app build..."
+    "$PROJECT_DIR/apps/examples/manual_capture/scripts/build.sh"
+fi
+
 echo "Build finished! Library artifacts are in build/lib/."
