@@ -43,9 +43,14 @@ def resolve_app_path(value):
 def window_mapping(desired, wlc_enabled):
     if not wlc_enabled:
         return desired, desired
-    requested = max(1, min(12, desired - 2))
-    returned = 2 * ((requested + 1) // 2) + 2
-    return requested, returned
+    if desired < 4 or desired > 14 or desired % 2:
+        raise ValueError(
+            f"WLC cannot return exactly {desired} windows. WLC returns "
+            "R = 2 * ceil(N / 2) + 2 for N in [1, 12], so supported "
+            "returned counts are 4, 6, 8, 10, 12, and 14."
+        )
+    # The controller converts this desired returned count to the ASIC request.
+    return desired, desired
 
 
 def rate_points(parameter_space, returned_windows, channel_count):

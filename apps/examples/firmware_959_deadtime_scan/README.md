@@ -8,7 +8,7 @@ Measurements with zero parsed events are written with `measurement_status: inval
 
 `binary_search.start_ns` is measured first for each parameter combination before ordinary binary-search midpoints. The focused 200–1000 ns configuration starts at 240 ns.
 
-`windows` means the desired returned record length. Normal mode requests it directly. WLC mode converts it to an ASIC request using `desired - 2`, rounds through the documented `2*ceil(n/2)+2` behavior, and caps the ASIC request at 12 (14 returned windows).
+`windows` means the desired returned record length in both modes. Normal mode requests it directly. In WLC mode the controller converts it to an ASIC request using the documented `2*ceil(n/2)+2` behavior. WLC therefore accepts only even returned lengths from 4 through 14 and rejects unrepresentable values.
 
 The board process remains alive for the scan. When a binary-search measurement repeats the same WLC mode, window request, and channel set, it restarts readout without reprogramming those settings. Changed settings are applied at the next measurement.
 

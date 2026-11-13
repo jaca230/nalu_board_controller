@@ -9,10 +9,11 @@ acquisition paths needed before removing firmware-959 workarounds:
   cleanly.
 
 The self-trigger checks also validate event shape and multiplicity. Normal mode
-expects the requested window count directly. WLC mode clamps the ASIC request
-to 1–12 and expects `2 * ceil(requested / 2) + 2` returned packets per
-channel-trigger. Thus the default request of 8 must return 10 packets per
-channel-trigger, and the maximum request of 12 returns 14. Both modes must also
+expects the requested window count directly. In WLC mode, the public window
+setting is also the desired returned count; the controller converts it to the
+ASIC request using `returned = 2 * ceil(asic_request / 2) + 2`. Consequently,
+WLC accepts the even returned lengths 4–14. For example, a user request of 8
+is sent to the ASIC as 6 and must return 8 packets per channel-trigger. Both modes must also
 produce one trigger group per 1 kHz Pico pulse within 5%; a historical 2×
 trigger regression therefore fails the suite explicitly.
 

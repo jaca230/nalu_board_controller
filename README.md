@@ -163,6 +163,14 @@ config.trigger.mode = "self";
 config.window_level_control.enabled = true;
 ```
 
+`readout_window.windows` always means the number of windows the caller wants
+returned. In normal mode that value is sent directly to the ASIC. In WLC mode,
+the controller converts it using
+`returned = 2 * ceil(asic_request / 2) + 2`. The representable WLC return
+lengths are therefore `4, 6, 8, 10, 12, 14`; any other value is rejected with
+an error that includes the formula and supported values. `lookback` and
+`write_after_trigger` remain independent and are not transformed.
+
 Relevant headers:
 
 ```text

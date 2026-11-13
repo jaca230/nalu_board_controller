@@ -21,6 +21,7 @@
 
 #include "nalu_board_controller/config/board_config.h"
 #include "nalu_board_controller/config/capture_config.h"
+#include "nalu_board_controller/config/wlc_window_mapping.h"
 #include "nalu_board_controller/controller/controller.h"
 #include "nalu_board_controller/logging/logging.h"
 
@@ -212,7 +213,10 @@ json measure(nalu_board_controller::Controller& controller,
     const double elapsed = stats.has_packets
         ? std::chrono::duration<double>(stats.last - stats.first).count() : 0.0;
     return {
-        {"wlc_enabled", wlc}, {"requested_windows", windows}, {"active_channels", channels},
+        {"wlc_enabled", wlc}, {"requested_windows", windows},
+        {"asic_requested_windows",
+         wlc ? nalu_board_controller::wlc_asic_windows_for_returned(windows) : windows},
+        {"active_channels", channels},
         {"duration_seconds", duration}, {"observed_duration_seconds", elapsed},
         {"udp_datagrams", stats.datagrams}, {"payload_bytes", stats.payload_bytes},
         {"packets_total", stats.packets}, {"events_total", stats.events},

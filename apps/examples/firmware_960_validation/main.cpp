@@ -11,6 +11,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "nalu_board_controller/config/wlc_window_mapping.h"
 #include "nalu_board_controller/config/window_level_control_config.h"
 #include "nalu_board_controller/controller/controller.h"
 #include "nalu_board_controller/logging/logging.h"
@@ -58,12 +59,10 @@ json run_scenario(nalu_board_controller::Controller& controller,
     const std::string trigger_mode = scenario.at("trigger_mode").get<std::string>();
     const bool wlc_enabled = scenario.at("wlc_enabled").get<bool>();
     const bool expect_data = scenario.at("expect_data").get<bool>();
-    const int requested_windows = wlc_enabled
-        ? std::max(1, std::min(12, configured_windows))
+    const int asic_requested_windows = wlc_enabled
+        ? nalu_board_controller::wlc_asic_windows_for_returned(configured_windows)
         : configured_windows;
-    const int expected_returned_windows = wlc_enabled
-        ? 2 * ((requested_windows + 1) / 2) + 2
-        : requested_windows;
+    const int expected_returned_windows = configured_windows;
     scenario_document["capture"]["trigger_mode"] = trigger_mode;
 
     const auto started = Clock::now();
@@ -71,7 +70,7 @@ json run_scenario(nalu_board_controller::Controller& controller,
         controller,
         scenario_document,
         wlc_enabled,
-        requested_windows,
+        configured_windows,
         channels,
         duration_seconds,
         firmware_959_scan::CaptureAction::ConfigureAndStart,
@@ -115,7 +114,8 @@ json run_scenario(nalu_board_controller::Controller& controller,
     result["wlc_enabled"] = wlc_enabled;
     result["expect_data"] = expect_data;
     result["configured_windows"] = configured_windows;
-    result["requested_windows"] = requested_windows;
+    result["requested_windows"] = configured_windows;
+    result["asic_requested_windows"] = asic_requested_windows;
     result["expected_returned_windows"] = expected_returned_windows;
     result["observed_windows_per_channel_trigger"] =
         observed_windows_per_channel_trigger;

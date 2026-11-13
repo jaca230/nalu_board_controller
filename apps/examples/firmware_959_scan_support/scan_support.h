@@ -23,6 +23,7 @@
 
 #include "nalu_board_controller/config/board_config.h"
 #include "nalu_board_controller/config/capture_config.h"
+#include "nalu_board_controller/config/wlc_window_mapping.h"
 #include "nalu_board_controller/controller/controller.h"
 
 namespace firmware_959_scan {
@@ -407,6 +408,8 @@ inline json measure(nalu_board_controller::Controller& controller,
         : 0.0;
     return {{"wlc_enabled", wlc},
             {"requested_windows", windows},
+            {"asic_requested_windows",
+             wlc ? nalu_board_controller::wlc_asic_windows_for_returned(windows) : windows},
             {"active_channels", channels},
             {"duration_seconds", duration_seconds},
             {"capture_elapsed_seconds", capture_elapsed},

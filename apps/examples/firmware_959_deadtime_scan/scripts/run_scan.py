@@ -72,8 +72,12 @@ class BoardProcess:
 
 def wlc_window_mapping(desired, enabled):
     if not enabled: return desired, desired
-    requested=max(1,min(12,desired-2))
-    return requested, 2*((requested+1)//2)+2
+    if desired < 4 or desired > 14 or desired % 2:
+        raise ValueError(
+            f'WLC cannot return exactly {desired} windows. WLC returns '
+            'R = 2 * ceil(N / 2) + 2 for N in [1, 12], so supported '
+            'returned counts are 4, 6, 8, 10, 12, and 14.')
+    return desired, desired
 
 def dry_result(enabled, requested, channels, duration, returned):
     return {'wlc_enabled':enabled,'requested_windows':requested,'active_channels':channels,

@@ -5,6 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "nalu_board_controller/config/wlc_window_mapping.h"
 #include "nalu_board_controller/python/backend.h"
 
 namespace {
@@ -52,6 +53,11 @@ Configurator::Configurator(State* state, PythonBackend* python_backend)
 
 void Configurator::configure_for_capture() {
     spdlog::debug("Starting capture configuration");
+    if (state_->window_level_control().enabled) {
+        // Validate the user-facing returned length before changing any capture
+        // registers. configure_readout() performs the corresponding conversion.
+        (void)wlc_asic_windows_for_returned(state_->readout_window().windows);
+    }
     configure_board_mode();
     configure_triggers();
     configure_dac_values();
@@ -170,8 +176,19 @@ void Configurator::configure_readout() {
         readout_controller.attr("set_readout_channels")(py_channels);
         spdlog::debug("Configured readout channels {}", join_ints(enabled_channels));
 
+        const int hardware_windows = state_->window_level_control().enabled
+            ? wlc_asic_windows_for_returned(readout_window.windows)
+            : readout_window.windows;
+        if (state_->window_level_control().enabled) {
+            spdlog::debug(
+                "WLC requested {} returned windows; configuring ASIC window request {} "
+                "using R = 2 * ceil(N / 2) + 2",
+                readout_window.windows,
+                hardware_windows);
+        }
+
         readout_controller.attr("set_read_window")(
-            readout_window.windows,
+            hardware_windows,
             readout_window.lookback,
             readout_window.write_after_trigger);
 
@@ -182,11 +199,14 @@ void Configurator::configure_readout() {
                           state_->readoutchannels_register());
         }
 
-        spdlog::debug("Configured readout window ({}, {}, {}) for {} enabled channels",
+        spdlog::debug("Configured readout window ({}, {}, {}) for {} enabled channels{}",
                       readout_window.windows,
                       readout_window.lookback,
                       readout_window.write_after_trigger,
-                      enabled_channels.size());
+                      enabled_channels.size(),
+                      state_->window_level_control().enabled
+                          ? " (WLC ASIC window request " + std::to_string(hardware_windows) + ")"
+                          : "");
     } catch (const py::error_already_set& error) {
         spdlog::error("Readout controller configuration failed: {}", error.what());
         throw;
