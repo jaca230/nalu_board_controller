@@ -1,0 +1,142 @@
+{
+  "logging": {
+    "level": "debug",
+    "python_level": "info"
+  },
+  "board": {
+    "model": "HDSoCv1_evalr2",
+    "board_endpoint": "192.168.1.59:4660",
+    "host_endpoint": "192.168.1.1:4660",
+    "asic_serial_mode": false,
+    "config_file": "",
+    "clock_file": "",
+    "clock_file_old": "resources/clocks/Si5341-RevD-HDSoC_31_25SYSclk_15_625SSTclk_400GccClk_156_25TxClk_31_25TxDivClk-Registers.txt"
+  },
+  "capture": {
+    "target_endpoint": "192.168.1.1:12345",
+    "assign_dac_values": true,
+    "readoutchannels_register": -1,
+    "readout_window": {
+      "windows": 8,
+      "lookback": 8,
+      "write_after_trigger": 8,
+      "lookback_mode": "trigrel"
+    },
+    "trigger": {
+      "mode": "self",
+      "low_reference": 5,
+      "high_reference": 11,
+      "rising_edge": true
+    },
+    "window_level_control": {
+      "enabled": false,
+      "reinitialize_after_change": true
+    },
+    "channels": {
+      "count": 32,
+      "defaults": {
+        "enabled": false,
+        "trigger_value": 1,
+        "dac_value": 1804
+      },
+      "overrides": {
+        "0": {
+          "enabled": true
+        },
+        "1": {
+          "enabled": true
+        },
+        "2": {
+          "enabled": true
+        },
+        "3": {
+          "enabled": true
+        },
+        "4": {
+          "enabled": true
+        },
+        "5": {
+          "enabled": true
+        },
+        "6": {
+          "enabled": true
+        },
+        "7": {
+          "enabled": true
+        },
+        "8": {
+          "enabled": true
+        },
+        "9": {
+          "enabled": true
+        },
+        "10": {
+          "enabled": true
+        },
+        "11": {
+          "enabled": true
+        },
+        "12": {
+          "enabled": true
+        },
+        "13": {
+          "enabled": true
+        },
+        "14": {
+          "enabled": true
+        },
+        "15": {
+          "enabled": true
+        },
+        "16": {
+          "enabled": true
+        },
+        "17": {
+          "enabled": true
+        },
+        "18": {
+          "enabled": true
+        },
+        "19": {
+          "enabled": true
+        },
+        "20": {
+          "enabled": true
+        },
+        "21": {
+          "enabled": true
+        },
+        "22": {
+          "enabled": true
+        },
+        "23": {
+          "enabled": true
+        },
+        "24": {
+          "enabled": true
+        },
+        "25": {
+          "enabled": true
+        },
+        "26": {
+          "enabled": true
+        },
+        "27": {
+          "enabled": true
+        },
+        "28": {
+          "enabled": true
+        },
+        "29": {
+          "enabled": true
+        },
+        "30": {
+          "enabled": true
+        },
+        "31": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

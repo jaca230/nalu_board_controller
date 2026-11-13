@@ -14,6 +14,9 @@ Run one of the app-specific launchers.
 Apps:
   manual_capture   Launch apps/examples/manual_capture/scripts/run.sh
   packet_listener  Launch apps/examples/packet_listener/scripts/run.sh
+  firmware_959_deadtime_scan  Launch the standalone normal/WLC deadtime scan
+  firmware_959_rate_scan  Launch the single-pulse rate/efficiency scan
+  firmware_959_channel_occupancy  Check nominal all-channel self-trigger occupancy
 
 Examples:
   ./apps/examples/manual_capture/scripts/build.sh
@@ -33,7 +36,7 @@ case "$1" in
         print_help
         exit 0
         ;;
-    manual_capture|packet_listener)
+    manual_capture|packet_listener|firmware_959_deadtime_scan|firmware_959_rate_scan|firmware_959_channel_occupancy)
         APP_NAME="$1"
         shift
         APP_RUNNER="$PROJECT_DIR/apps/examples/$APP_NAME/scripts/run.sh"

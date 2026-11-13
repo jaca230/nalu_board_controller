@@ -29,6 +29,7 @@ public:
     std::string read_firmware_version() const;
 
     void start_capture(const CaptureConfig& config);
+    void resume_capture();
     void start_capture(const std::string& target_endpoint,
                        const std::vector<int>& channels,
                        const ReadoutWindowConfig& readout_window,

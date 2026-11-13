@@ -46,7 +46,7 @@ private:
     void finalize_interpreter();
     void clear_python_objects();
     void restart_board();
-    void connect_verified_udp_board(bool fresh_board);
+    bool connect_verified_udp_board(bool fresh_board);
     bool wait_for_identifier(int attempts);
     void startup_board_with_retries();
 

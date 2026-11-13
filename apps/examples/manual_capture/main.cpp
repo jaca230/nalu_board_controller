@@ -117,7 +117,6 @@ nalu_board_controller::CaptureConfig parse_capture_config(const json& object) {
 
     if (const auto wlc_it = object.find("window_level_control");
         wlc_it != object.end() && wlc_it->is_object()) {
-        assign_if_present(*wlc_it, "configure", config.window_level_control.configure);
         assign_if_present(*wlc_it, "enabled", config.window_level_control.enabled);
         assign_if_present(
             *wlc_it,
@@ -192,6 +191,7 @@ int main(int argc, char** argv) {
         const auto capture_config = parse_capture_config(document.at("capture"));
 
         nalu_board_controller::Controller controller(board_config);
+        controller.set_window_level_control(capture_config.window_level_control);
         controller.initialize_board();
         controller.sync_python_logging(python_level);
         spdlog::info("Board firmware version: {}", controller.read_firmware_version());

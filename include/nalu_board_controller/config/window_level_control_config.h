@@ -4,7 +4,6 @@
 namespace nalu_board_controller {
 
 struct WindowLevelControlConfig {
-    bool configure = false;
     bool enabled = false;
     bool reinitialize_after_change = true;
 };

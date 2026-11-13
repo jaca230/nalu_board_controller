@@ -1,0 +1,223 @@
+{
+  "log_level": "info",
+  "board": {
+    "model": "HDSoCv1_evalr2",
+    "board_endpoint": "192.168.1.59:4660",
+    "host_endpoint": "192.168.1.1:4660",
+    "asic_serial_mode": false
+  },
+  "receiver": {
+    "address": "192.168.1.1",
+    "port": 12345,
+    "udp_header_bytes": 16
+  },
+  "capture": {
+    "target_endpoint": "192.168.1.1:12345",
+    "assign_dac_values": false,
+    "readoutchannels_register": -1,
+    "lookback_mode": "trigrel",
+    "trigger_mode": "self",
+    "low_reference": 5,
+    "high_reference": 11,
+    "rising_edge": true,
+    "trigger_value": 1,
+    "dac_value": 1804,
+    "channel_count": 32
+  },
+  "pico": {
+    "source_directory": "/home/pioneer/packages/software/pico_scripts",
+    "serial_port": "/dev/ttyACM0",
+    "hardware_id": "double_pulse_gen",
+    "pin_number": 15,
+    "pulse_width_ns": 250
+  },
+  "parameter_space": {
+    "windows": [
+      4,
+      6
+    ],
+    "pulse_rates_hz": [
+      100
+    ],
+    "wlc_enabled": [
+      true
+    ],
+    "channels": [
+      {
+        "id": "1_channels",
+        "channels": [
+          0
+        ]
+      },
+      {
+        "id": "2_channels",
+        "channels": [
+          0,
+          1
+        ]
+      },
+      {
+        "id": "3_channels",
+        "channels": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "id": "4_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": "5_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "id": "6_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "id": "7_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "id": "8_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8
+        ]
+      },
+      {
+        "id": "9_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9
+        ]
+      },
+      {
+        "id": "10_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10
+        ]
+      },
+      {
+        "id": "11_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      {
+        "id": "12_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "id": "13_channels",
+        "channels": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ]
+      }
+    ]
+  },
+  "binary_search": {
+    "min_ns": 300,
+    "max_ns": 1000,
+    "tolerance_ns": 32,
+    "max_iterations": 20,
+    "ratio_threshold": 1.9,
+    "start_ns": 300,
+    "maximum_valid_ratio": 2.2
+  },
+  "run": {
+    "duration_seconds": 10,
+    "settle_seconds": 2,
+    "samples_per_point": 1,
+    "zero_event_max_retries": 3,
+    "zero_event_retry_delay_seconds": 2
+  },
+  "logging": {
+    "output": "rate_data/firmware_959_wlc_windows_4_6_200ns_1000ns.jsonl"
+  }
+}

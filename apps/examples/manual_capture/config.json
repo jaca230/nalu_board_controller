@@ -15,11 +15,11 @@
   "capture": {
     "target_endpoint": "192.168.1.1:12345",
     "assign_dac_values": true,
-    "readoutchannels_register": 57,
+    "readoutchannels_register": -1,
     "readout_window": {
-      "windows": 1,
-      "lookback": 1,
-      "write_after_trigger": 1,
+      "windows": 8,
+      "lookback": 8,
+      "write_after_trigger": 8,
       "lookback_mode": "trigrel"
     },
     "trigger": {
@@ -29,7 +29,6 @@
       "rising_edge": true
     },
     "window_level_control": {
-      "configure": false,
       "enabled": false,
       "reinitialize_after_change": true
     },
@@ -56,7 +55,23 @@
         "12": {"enabled": true},
         "13": {"enabled": true},
         "14": {"enabled": true},
-        "15": {"enabled": true}
+        "15": {"enabled": true},
+        "16": {"enabled": true},
+        "17": {"enabled": true},
+        "18": {"enabled": true},
+        "19": {"enabled": true},
+        "20": {"enabled": true},
+        "21": {"enabled": true},
+        "22": {"enabled": true},
+        "23": {"enabled": true},
+        "24": {"enabled": true},
+        "25": {"enabled": true},
+        "26": {"enabled": true},
+        "27": {"enabled": true},
+        "28": {"enabled": true},
+        "29": {"enabled": true},
+        "30": {"enabled": true},
+        "31": {"enabled": true}
       }
     }
   }

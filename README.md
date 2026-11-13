@@ -124,6 +124,14 @@ The `apps/examples/` tree is example/application code, not part of the installed
 - run script: [apps/examples/packet_listener/scripts/run.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/run.sh:1)
 - screening scripts: [apps/examples/packet_listener/scripts/screening/start.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/screening/start.sh:1) and [stop.sh](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/scripts/screening/stop.sh:1)
 
+Firmware-959 diagnostics:
+
+- `apps/examples/firmware_959_deadtime_scan`: double-pulse deadtime search.
+- `apps/examples/firmware_959_rate_scan`: deterministic single-pulse rate and
+  capture-efficiency scan with a framed raw UDP file for every attempt.
+- `apps/examples/firmware_959_channel_occupancy`: nominal all-enabled-channel
+  self-trigger occupancy check.
+
 Top-level dispatcher:
 
 ```bash
@@ -132,6 +140,10 @@ Top-level dispatcher:
 ./scripts/run.sh manual_capture
 ./apps/examples/packet_listener/scripts/build.sh
 ./scripts/run.sh packet_listener
+./apps/examples/firmware_959_rate_scan/scripts/build.sh
+./scripts/run.sh firmware_959_rate_scan --dry-run
+./apps/examples/firmware_959_channel_occupancy/scripts/build.sh
+./scripts/run.sh firmware_959_channel_occupancy
 ```
 
 ## Capture Config
@@ -143,7 +155,6 @@ nalu_board_controller::CaptureConfig config;
 config.readout_window.windows = 8;
 config.readout_window.lookback = 8;
 config.trigger.mode = "self";
-config.window_level_control.configure = true;
 config.window_level_control.enabled = true;
 ```
 
@@ -161,13 +172,23 @@ nalu_board_controller/config/window_level_control_config.h
 
 Behavior:
 
-- `configure = false`: leave WLC untouched
-- `configure = true` and `enabled = true|false`: write the `wlc_on` register
+- `enabled = true|false`: select WLC or normal mode during board initialization
 - `reinitialize_after_change = true`: re-run board startup after the register change, matching the workflow used in the reference notebooks
 
 This is aimed primarily at HDSoCv1/HDSoCv2-style boards where the register is available. If the underlying board/register path does not support WLC, the operation will fail loudly instead of silently pretending it succeeded.
 
 For `manual_capture`, the executable now reads its settings from JSON instead of hardcoding them in `main.cpp`. Edit [apps/examples/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/config.json:1) to change board, trigger, readout-window, channel, and window-level-control settings. Its HDSoCv1 clock file now lives under `apps/examples/manual_capture/resources/`, alongside the rest of the app assets.
+
+The manual capture example includes four self-trigger test configurations:
+
+```bash
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.self_trigger.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.roi.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.wlc.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.roi_wlc.json
+```
+
+All four enable 32 channels with trigger threshold 1. The ROI configurations use the firmware 959 notebook values `(windows, lookback, write_after_trigger) = (24, 50, 33)` and `readoutchannels = 57`. The WLC configurations select `wlc_on = 1` before board startup.
 
 For `packet_listener`, edit [apps/examples/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/config.json:1) to change the UDP bind address, port, and packet parser settings. The listener prints parsed packet information in real time without event bundling.
 

@@ -69,6 +69,14 @@ void Controller::start_capture(const CaptureConfig& config) {
     python_backend_->start_capture();
 }
 
+void Controller::resume_capture() {
+    if (!state_->is_initialized()) {
+        throw std::runtime_error("Board not initialized");
+    }
+    python_backend_->ensure_control_connection();
+    python_backend_->start_capture();
+}
+
 void Controller::start_capture(const std::string& target_endpoint,
                                const std::vector<int>& channels,
                                const ReadoutWindowConfig& readout_window,

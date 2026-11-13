@@ -126,7 +126,7 @@ bool PythonBackend::wait_for_identifier(int attempts) {
     return false;
 }
 
-void PythonBackend::connect_verified_udp_board(bool fresh_board) {
+bool PythonBackend::connect_verified_udp_board(bool fresh_board) {
     py::module_ naludaq_board = py::module_::import("naludaq.board");
     constexpr int connection_attempts = 3;
     for (int attempt = 1; attempt <= connection_attempts; ++attempt) {
@@ -140,8 +140,43 @@ void PythonBackend::connect_verified_udp_board(bool fresh_board) {
             board_.attr("get_udp_connection")(
                 py::make_tuple(state_->board_address().getIp(), state_->board_address().getPort()),
                 py::make_tuple(state_->host_address().getIp(), state_->host_address().getPort()));
-            if (wait_for_identifier(5)) {
-                return;
+            // naludaq's read_until has no datagram limit. A stale event stream on
+            // the control port can therefore keep a register read inside recv
+            // forever. Preserve its stop-word protocol while bounding the read.
+            py::object connection = board_.attr("connection");
+            connection.attr("read_until") = py::cpp_function(
+                [connection](py::bytes stop_word) -> py::bytes {
+                    const std::string stop = stop_word;
+                    std::string buffer;
+                    constexpr int max_datagrams = 64;
+                    for (int packet = 0; packet < max_datagrams; ++packet) {
+                        const std::string next = py::bytes(connection.attr("read")(24));
+                        if (next.empty()) {
+                            break;
+                        }
+                        buffer += next;
+                        if (!stop.empty() && buffer.size() >= stop.size() &&
+                            buffer.compare(buffer.size() - stop.size(), stop.size(), stop) == 0) {
+                            break;
+                        }
+                    }
+                    return py::bytes(buffer);
+                });
+            // A previous process may have exited without stopping readout. Reconnecting
+            // routes that stream to the control socket, where it can starve register reads.
+            naludaq_board.attr("get_board_controller")(board_).attr("stop_readout")();
+            if (wait_for_identifier(fresh_board ? 2 : 5)) {
+                return false;
+            }
+            if (fresh_board) {
+                spdlog::warn("Identifier invalid after UDP connection; resetting and starting the board before retrying");
+                board_.attr("params").attr("__setitem__")(
+                    "serial_mode", py::bool_(state_->asic_serial_mode()));
+                naludaq_board.attr("get_board_controller")(board_).attr("reset_board")();
+                startup_board_with_retries();
+                if (wait_for_identifier(2)) {
+                    return true;
+                }
             }
         } catch (const py::error_already_set& error) {
             spdlog::warn("UDP connection attempt {}/{} failed: {}",
@@ -222,7 +257,12 @@ void PythonBackend::initialize_board() {
         dac_controller_ = naludaq_board.attr("get_dac_controller")(board_);
         connection_controller_ = naludaq_conn.attr("get_connection_controller")(board_);
 
-        board_controller_.attr("reset_board")();
+        // Selecting WLC mode changes startup-sensitive firmware state, so board
+        // initialization must always finish with a reset/startup cycle.
+        const bool needs_startup = true;
+        if (needs_startup) {
+            board_controller_.attr("reset_board")();
+        }
 
         if (!state_->clock_file().empty()) {
             board_.attr("load_clockfile")(state_->clock_file());
@@ -236,13 +276,15 @@ void PythonBackend::initialize_board() {
         digital_registers_ = naludaq_comm.attr("DigitalRegisters")(board_);
 
         const auto& window_level_control = state_->window_level_control();
-        if (window_level_control.configure) {
-            digital_registers_.attr("write")("wlc_on", window_level_control.enabled ? 1 : 0);
-            spdlog::info("Preparing WLC mode during board initialization: enabled={}",
-                         window_level_control.enabled);
-        }
+        digital_registers_.attr("write")("wlc_on", window_level_control.enabled ? 1 : 0);
+        spdlog::info("Preparing WLC mode during board initialization: enabled={}",
+                     window_level_control.enabled);
 
-        startup_board_with_retries();
+        if (needs_startup) {
+            startup_board_with_retries();
+        } else {
+            spdlog::info("Using board startup completed during UDP connection recovery");
+        }
         spdlog::info("Board '{}' initialized successfully", state_->model());
     } catch (const py::error_already_set& error) {
         spdlog::error("Board initialization failed: {}", error.what());

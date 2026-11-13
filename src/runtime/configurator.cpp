@@ -24,7 +24,7 @@ std::string join_ints(const std::vector<int>& values) {
 
 bool same_wlc_mode(const nalu_board_controller::WindowLevelControlConfig& lhs,
                    const nalu_board_controller::WindowLevelControlConfig& rhs) {
-    return lhs.configure == rhs.configure && lhs.enabled == rhs.enabled;
+    return lhs.enabled == rhs.enabled;
 }
 
 py::dict build_reference_groups(const nalu_board_controller::State& state) {
@@ -62,34 +62,25 @@ void Configurator::configure_for_capture() {
 void Configurator::configure_board_mode() {
     const auto& window_level_control = state_->window_level_control();
     if (!state_->has_initialized_window_level_control()) {
-        if (!window_level_control.configure) {
-            spdlog::debug("WLC configuration disabled; leaving board mode unchanged");
-            return;
-        }
         spdlog::warn(
-            "WLC mode is configured for this run, but no board-initialization WLC state was recorded. "
-            "WLC changes are only applied during board initialization; continuing without changing board mode.");
+            "No board-initialization WLC state was recorded; applying requested mode at run start");
+        python_backend_->apply_wlc(window_level_control);
+        state_->mark_initialized_window_level_control();
         return;
     }
 
     if (!same_wlc_mode(window_level_control, state_->initialized_window_level_control())) {
-        spdlog::warn(
-            "Requested WLC mode change at run start ignored. WLC changes are only applied during board initialization. "
-            "initialized=(configure={}, enabled={}), requested=(configure={}, enabled={})",
-            state_->initialized_window_level_control().configure,
+        spdlog::info(
+            "Changing WLC mode at run start: initialized={}, requested={}, reinitialize={}",
             state_->initialized_window_level_control().enabled,
-            window_level_control.configure,
-            window_level_control.enabled);
+            window_level_control.enabled,
+            window_level_control.reinitialize_after_change);
+        python_backend_->apply_wlc(window_level_control);
+        state_->mark_initialized_window_level_control();
         return;
     }
 
-    if (!window_level_control.configure) {
-        spdlog::debug("WLC configuration disabled and matches board initialization; leaving board mode unchanged");
-        return;
-    }
-
-    spdlog::debug(
-        "WLC mode already matches board initialization; no run-start board-mode changes applied");
+    spdlog::debug("WLC mode already matches board initialization");
 }
 
 void Configurator::configure_triggers() {
