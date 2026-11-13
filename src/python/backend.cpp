@@ -333,13 +333,6 @@ void PythonBackend::start_capture() {
 
         connection_controller_.attr("_configure_ethernet")();
 
-        // Firmware 959 needs time to apply the new UDP destination before
-        // it will reliably accept the readout-start command.
-        constexpr auto receiver_settle_delay = std::chrono::seconds(2);
-        spdlog::info("Waiting {} seconds for UDP destination to settle before readout",
-                     receiver_settle_delay.count());
-        std::this_thread::sleep_for(receiver_settle_delay);
-
         const auto& readout_window = state_->readout_window();
         if (!readout_window.lookback_mode.empty() && readout_window.lookback_mode != "default") {
             board_controller_.attr("start_readout")(

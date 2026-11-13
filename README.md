@@ -132,6 +132,11 @@ Firmware-959 diagnostics:
 - `apps/examples/firmware_959_channel_occupancy`: nominal all-enabled-channel
   self-trigger occupancy check.
 
+Firmware-960 validation:
+
+- `apps/examples/firmware_960_validation`: firmware readback plus short normal
+  self-trigger, WLC self-trigger, and no-source external-trigger checks.
+
 Top-level dispatcher:
 
 ```bash
