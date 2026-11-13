@@ -14,6 +14,7 @@ namespace nalu_board_controller {
 struct CaptureConfig {
     std::string target_endpoint = "192.168.1.1:12345";
     bool assign_dac_values = false;
+    int readoutchannels_register = -1;
     ReadoutWindowConfig readout_window;
     TriggerConfig trigger;
     WindowLevelControlConfig window_level_control;

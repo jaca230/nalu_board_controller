@@ -37,6 +37,7 @@ public:
     const std::vector<int>& trigger_values() const { return trigger_values_; }
     const std::vector<int>& dac_values() const { return dac_values_; }
     bool assign_dac_values() const { return assign_dac_values_; }
+    int readoutchannels_register() const { return readoutchannels_register_; }
     const WindowLevelControlConfig& window_level_control() const { return window_level_control_; }
     const WindowLevelControlConfig& initialized_window_level_control() const {
         return initialized_window_level_control_;
@@ -67,6 +68,7 @@ private:
     std::vector<int> trigger_values_;
     std::vector<int> dac_values_;
     bool assign_dac_values_ = false;
+    int readoutchannels_register_ = -1;
     WindowLevelControlConfig window_level_control_;
     WindowLevelControlConfig initialized_window_level_control_;
     bool has_initialized_window_level_control_ = false;

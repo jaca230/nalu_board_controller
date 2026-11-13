@@ -60,8 +60,20 @@ void Controller::initialize_board() {
     state_->set_initialized(true);
 }
 
+std::string Controller::read_firmware_version() const {
+    return python_backend_->read_firmware_version();
+}
+
 void Controller::start_capture(const CaptureConfig& config) {
     init_capture(config);
+    python_backend_->start_capture();
+}
+
+void Controller::resume_capture() {
+    if (!state_->is_initialized()) {
+        throw std::runtime_error("Board not initialized");
+    }
+    python_backend_->ensure_control_connection();
     python_backend_->start_capture();
 }
 
@@ -114,6 +126,7 @@ void Controller::init_capture(const CaptureConfig& config) {
         throw std::runtime_error("Board not initialized");
     }
 
+    python_backend_->ensure_control_connection();
     state_->update_from_capture_config(config);
     configurator_->configure_for_capture();
 }

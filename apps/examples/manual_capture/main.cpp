@@ -96,6 +96,7 @@ nalu_board_controller::CaptureConfig parse_capture_config(const json& object) {
     nalu_board_controller::CaptureConfig config;
     assign_if_present(object, "target_endpoint", config.target_endpoint);
     assign_if_present(object, "assign_dac_values", config.assign_dac_values);
+    assign_if_present(object, "readoutchannels_register", config.readoutchannels_register);
 
     if (const auto readout_it = object.find("readout_window");
         readout_it != object.end() && readout_it->is_object()) {
@@ -116,7 +117,6 @@ nalu_board_controller::CaptureConfig parse_capture_config(const json& object) {
 
     if (const auto wlc_it = object.find("window_level_control");
         wlc_it != object.end() && wlc_it->is_object()) {
-        assign_if_present(*wlc_it, "configure", config.window_level_control.configure);
         assign_if_present(*wlc_it, "enabled", config.window_level_control.enabled);
         assign_if_present(
             *wlc_it,
@@ -191,8 +191,10 @@ int main(int argc, char** argv) {
         const auto capture_config = parse_capture_config(document.at("capture"));
 
         nalu_board_controller::Controller controller(board_config);
+        controller.set_window_level_control(capture_config.window_level_control);
         controller.initialize_board();
         controller.sync_python_logging(python_level);
+        spdlog::info("Board firmware version: {}", controller.read_firmware_version());
 
         spdlog::info("Starting board capture using config '{}'", config_path);
         controller.start_capture(capture_config);

@@ -33,6 +33,7 @@ void State::update_from_capture_config(const CaptureConfig& config) {
     trigger_ = config.trigger;
     trigger_.mode = to_lower_copy(trigger_.mode);
     assign_dac_values_ = config.assign_dac_values;
+    readoutchannels_register_ = config.readoutchannels_register;
     window_level_control_ = config.window_level_control;
 
     channel_settings_ = config.channels;

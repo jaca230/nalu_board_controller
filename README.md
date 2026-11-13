@@ -143,9 +143,16 @@ nalu_board_controller::CaptureConfig config;
 config.readout_window.windows = 8;
 config.readout_window.lookback = 8;
 config.trigger.mode = "self";
-config.window_level_control.configure = true;
 config.window_level_control.enabled = true;
 ```
+
+`readout_window.windows` always means the number of windows the caller wants
+returned. In normal mode that value is sent directly to the ASIC. In WLC mode,
+the controller converts it using
+`returned = 2 * ceil(asic_request / 2) + 2`. The representable WLC return
+lengths are therefore `4, 6, 8, 10, 12, 14`; any other value is rejected with
+an error that includes the formula and supported values. `lookback` and
+`write_after_trigger` remain independent and are not transformed.
 
 Relevant headers:
 
@@ -161,13 +168,24 @@ nalu_board_controller/config/window_level_control_config.h
 
 Behavior:
 
-- `configure = false`: leave WLC untouched
-- `configure = true` and `enabled = true|false`: write the `wlc_on` register
+- `enabled = true|false`: select WLC or normal mode during board initialization
 - `reinitialize_after_change = true`: re-run board startup after the register change, matching the workflow used in the reference notebooks
 
 This is aimed primarily at HDSoCv1/HDSoCv2-style boards where the register is available. If the underlying board/register path does not support WLC, the operation will fail loudly instead of silently pretending it succeeded.
 
 For `manual_capture`, the executable now reads its settings from JSON instead of hardcoding them in `main.cpp`. Edit [apps/examples/manual_capture/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/manual_capture/config.json:1) to change board, trigger, readout-window, channel, and window-level-control settings. Its HDSoCv1 clock file now lives under `apps/examples/manual_capture/resources/`, alongside the rest of the app assets.
+
+The manual capture example includes four self-trigger test configurations:
+
+```bash
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.self_trigger.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.roi.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.wlc.json
+./scripts/run.sh manual_capture --config apps/examples/manual_capture/config.roi_wlc.json
+```
+
+All four enable 32 channels with trigger threshold 1. The WLC configurations
+select `wlc_on = 1` before board startup.
 
 For `packet_listener`, edit [apps/examples/packet_listener/config.json](/home/pioneer/packages/software/nalu_board_controller/apps/examples/packet_listener/config.json:1) to change the UDP bind address, port, and packet parser settings. The listener prints parsed packet information in real time without event bundling.
 

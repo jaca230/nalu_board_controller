@@ -5,6 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "nalu_board_controller/config/wlc_window_mapping.h"
 #include "nalu_board_controller/python/backend.h"
 
 namespace {
@@ -24,7 +25,7 @@ std::string join_ints(const std::vector<int>& values) {
 
 bool same_wlc_mode(const nalu_board_controller::WindowLevelControlConfig& lhs,
                    const nalu_board_controller::WindowLevelControlConfig& rhs) {
-    return lhs.configure == rhs.configure && lhs.enabled == rhs.enabled;
+    return lhs.enabled == rhs.enabled;
 }
 
 py::dict build_reference_groups(const nalu_board_controller::State& state) {
@@ -52,45 +53,40 @@ Configurator::Configurator(State* state, PythonBackend* python_backend)
 
 void Configurator::configure_for_capture() {
     spdlog::debug("Starting capture configuration");
+    if (state_->window_level_control().enabled) {
+        // Validate the user-facing returned length before changing any capture
+        // registers. configure_readout() performs the corresponding conversion.
+        (void)wlc_asic_windows_for_returned(state_->readout_window().windows);
+    }
     configure_board_mode();
     configure_triggers();
     configure_dac_values();
     configure_readout();
-    configure_connection();
     spdlog::debug("Capture configuration completed");
 }
 
 void Configurator::configure_board_mode() {
     const auto& window_level_control = state_->window_level_control();
     if (!state_->has_initialized_window_level_control()) {
-        if (!window_level_control.configure) {
-            spdlog::debug("WLC configuration disabled; leaving board mode unchanged");
-            return;
-        }
         spdlog::warn(
-            "WLC mode is configured for this run, but no board-initialization WLC state was recorded. "
-            "WLC changes are only applied during board initialization; continuing without changing board mode.");
+            "No board-initialization WLC state was recorded; applying requested mode at run start");
+        python_backend_->apply_wlc(window_level_control);
+        state_->mark_initialized_window_level_control();
         return;
     }
 
     if (!same_wlc_mode(window_level_control, state_->initialized_window_level_control())) {
-        spdlog::warn(
-            "Requested WLC mode change at run start ignored. WLC changes are only applied during board initialization. "
-            "initialized=(configure={}, enabled={}), requested=(configure={}, enabled={})",
-            state_->initialized_window_level_control().configure,
+        spdlog::info(
+            "Changing WLC mode at run start: initialized={}, requested={}, reinitialize={}",
             state_->initialized_window_level_control().enabled,
-            window_level_control.configure,
-            window_level_control.enabled);
+            window_level_control.enabled,
+            window_level_control.reinitialize_after_change);
+        python_backend_->apply_wlc(window_level_control);
+        state_->mark_initialized_window_level_control();
         return;
     }
 
-    if (!window_level_control.configure) {
-        spdlog::debug("WLC configuration disabled and matches board initialization; leaving board mode unchanged");
-        return;
-    }
-
-    spdlog::debug(
-        "WLC mode already matches board initialization; no run-start board-mode changes applied");
+    spdlog::debug("WLC mode already matches board initialization");
 }
 
 void Configurator::configure_triggers() {
@@ -123,6 +119,12 @@ void Configurator::configure_triggers() {
 
         trigger_controller.attr("set_trigger_edge")(py::str("left"), state_->trigger().rising_edge);
         trigger_controller.attr("set_trigger_edge")(py::str("right"), state_->trigger().rising_edge);
+        if (py::hasattr(trigger_controller, "tsel")) {
+            py::dict trigger_select;
+            trigger_select["left"] = true;
+            trigger_select["right"] = true;
+            trigger_controller.attr("tsel") = trigger_select;
+        }
 
         spdlog::debug("Configured trigger values {} with references {}-{} for readout mode '{}'",
                       join_ints(state_->trigger_values()),
@@ -166,35 +168,47 @@ void Configurator::configure_readout() {
     try {
         auto& readout_controller = python_backend_->readout_controller();
         const auto& readout_window = state_->readout_window();
-
+        const auto& enabled_channels = state_->enabled_channels();
         py::list py_channels;
-        for (int channel : state_->enabled_channels()) {
+        for (int channel : enabled_channels) {
             py_channels.append(channel);
         }
-
         readout_controller.attr("set_readout_channels")(py_channels);
+        spdlog::debug("Configured readout channels {}", join_ints(enabled_channels));
+
+        const int hardware_windows = state_->window_level_control().enabled
+            ? wlc_asic_windows_for_returned(readout_window.windows)
+            : readout_window.windows;
+        if (state_->window_level_control().enabled) {
+            spdlog::debug(
+                "WLC requested {} returned windows; configuring ASIC window request {} "
+                "using R = 2 * ceil(N / 2) + 2",
+                readout_window.windows,
+                hardware_windows);
+        }
+
         readout_controller.attr("set_read_window")(
-            readout_window.windows,
+            hardware_windows,
             readout_window.lookback,
             readout_window.write_after_trigger);
 
-        spdlog::debug("Configured readout channels {} and window ({}, {}, {})",
-                      join_ints(state_->enabled_channels()),
+        if (state_->readoutchannels_register() >= 0) {
+            python_backend_->digital_registers().attr("write")(
+                "readoutchannels", state_->readoutchannels_register());
+            spdlog::debug("Set digital readoutchannels register to {}",
+                          state_->readoutchannels_register());
+        }
+
+        spdlog::debug("Configured readout window ({}, {}, {}) for {} enabled channels{}",
                       readout_window.windows,
                       readout_window.lookback,
-                      readout_window.write_after_trigger);
+                      readout_window.write_after_trigger,
+                      enabled_channels.size(),
+                      state_->window_level_control().enabled
+                          ? " (WLC ASIC window request " + std::to_string(hardware_windows) + ")"
+                          : "");
     } catch (const py::error_already_set& error) {
         spdlog::error("Readout controller configuration failed: {}", error.what());
-        throw;
-    }
-}
-
-void Configurator::configure_connection() {
-    try {
-        python_backend_->connection_controller().attr("_configure_ethernet")();
-        spdlog::debug("Ethernet connection configured");
-    } catch (const py::error_already_set& error) {
-        spdlog::error("Connection configuration failed: {}", error.what());
         throw;
     }
 }

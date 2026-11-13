@@ -355,6 +355,12 @@ void print_packet(const PacketInfo& packet) {
     std::ostringstream samples;
     samples << std::hex << std::setfill('0');
 
+    const auto [min_sample, max_sample] = std::minmax_element(
+        packet.raw_samples.begin(), packet.raw_samples.end());
+    const auto nonzero_samples = std::count_if(
+        packet.raw_samples.begin(), packet.raw_samples.end(),
+        [](uint8_t value) { return value != 0; });
+
     for (size_t i = 0; i < 4; ++i) {
         if (i > 0) {
             samples << ' ';
@@ -364,13 +370,16 @@ void print_packet(const PacketInfo& packet) {
     }
 
     spdlog::info(
-        "packet={} channel={} trigger_time={} logical_position={} physical_position={} first_bytes=[{}]",
+        "packet={} channel={} trigger_time={} logical_position={} physical_position={} first_bytes=[{}] sample_byte_min={} sample_byte_max={} nonzero_bytes={}",
         packet.index,
         static_cast<int>(packet.channel),
         packet.trigger_time,
         packet.logical_position,
         packet.physical_position,
-        samples.str());
+        samples.str(),
+        static_cast<int>(*min_sample),
+        static_cast<int>(*max_sample),
+        nonzero_samples);
 }
 
 void print_summary(const ListenerStats& stats, uint64_t sample_limit) {
